@@ -1,6 +1,5 @@
 #! /usr/bin/env nextflow
 
-// Analysis script for MitoChronos pipeline
 nextflow.enable.dsl = 2
 
 // Import subworkflows
@@ -13,46 +12,32 @@ include { RUN_BEAST         } from "$projectDir/subworkflows/run_beast/main"
 
 workflow {
 
-    // Define workflow stages
-    def recognized_workflow_stages = ['fasta_processing','generate_XML','run_beast']
-
-    // Check input
-    def workflow_steps = params.steps.tokenize(",")
-    if ( ! workflow_steps.every { it in recognized_workflow_stages } ) {
-        error "Unrecognised workflow step in $params.steps ( $recognized_workflow_stages )"
-    }
+    // Set the workflow name
+    def workflow_name = params.workflow_run_name ?: workflow.runName
 
     //
     log.info("""
-    Running MitoChronos.
+    Running MitoDating. Workflow run name: $workflow_name
     """)
 
     // Define input channels
-    Channel.fromPath(params.sample_metadata, checkIfExists: true).set { meta }
+    Channel.fromPath(params.sample_metadata, checkIfExists: true).set { metadata }
     Channel.fromPath(params.fasta, checkIfExists: true).set     { fasta }
     Channel.fromPath(params.priors, checkIfExists: true).set    { priors }
-    Channel.fromPath(params.partition).set                      { partition }
-    Channel.fromPath(params.gff).set                            { gff }
+    // Channel.fromPath(params.partition).set                      { partition }
+    // Channel.fromPath(params.gff).set                            { gff }
 
-
-    // Split fasta file for single sample dating
-
-    if ( 'fasta_processing' in workflow_steps ) {
-        FASTA_PROCESSING ( fasta, meta )
+    if ( params.fasta_processing.toBoolean() ) {
+        FASTA_PROCESSING ( fasta, metadata )
     }
 
+    if ( params.generate_XML.toBoolean() ) {
+        XML_PROCESSING ( FASTA_PROCESSING.out.fastas, metadata, priors)
+    }
 
-    // // Generate XML file
-    // if ( 'generate_XML' in workflow_steps ) {
-    //     XML_PROCESSING ( FASTA_PROCESSING.out.fastas, priors, gff, partition,
-    //     params.chainlength, params.log_step, params.partition_list, params.nd_list, params.taxon_set
-    //     )
-    // }
-
-    // // Run BEAST
-    // if ( 'run_beast' in workflow_steps ) {
-    //    RUN_BEAST( XML_PROCESSING.out.xml )
-    // }
+    if ( params.run_beast.toBoolean() ) {
+        RUN_BEAST( XML_PROCESSING.out.xml )
+    }
 
 }
 
@@ -60,7 +45,7 @@ workflow {
 workflow.onComplete {
     if( workflow.success ){
         log.info("""
-        Thank you for using MitoChronos.
+        Thank you for using MitoDating.
 
         Results are located in the results folder.
         """)

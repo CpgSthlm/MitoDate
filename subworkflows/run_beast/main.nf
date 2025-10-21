@@ -9,7 +9,7 @@ workflow RUN_BEAST {
     main:
     ch_versions = Channel.empty()
 
-    BEAST( xml.flatten() )
+    BEAST( xml )
 
     ch_versions = ch_versions.mix(BEAST.out.versions)
 

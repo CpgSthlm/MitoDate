@@ -4,22 +4,14 @@ include { GENERATEXML } from '../../modules/generatexml/main'
 
 workflow XML_PROCESSING {
     take:
-    fastas
+    fasta
+    metadata
     priors
-    gff
-    partition
-    chainlength
-    log_step
-    partition_list
-    nd_list
-    taxon_set
 
     main:
     ch_versions = Channel.empty()
 
-    GENERATEXML( fastas.flatten() , priors, gff, partition,
-    chainlength, log_step, partition_list, nd_list, taxon_set
-    )
+    GENERATEXML( fasta, metadata, priors )
 
     ch_versions = ch_versions.mix(GENERATEXML.out.versions)
 

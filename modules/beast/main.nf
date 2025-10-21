@@ -1,8 +1,13 @@
 process BEAST {
+    tag "${xml}"
     label 'process_high'
 
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+        'https://depot.galaxyproject.org/singularity/beast%3A1.10.4--hdfd78af_2' :
+        'community.wave.seqera.io/library/beast:1.10.4--2b8ba8c6c4be979a' }"
+
     input:
-    each path(xml)
+    path(xml)
 
     output:
     path('*')                   , emit: beast_output

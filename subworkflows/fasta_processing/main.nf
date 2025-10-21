@@ -23,7 +23,8 @@ workflow FASTA_PROCESSING {
 
 
     emit:
-    versions                           = ch_versions
+    fastas      = params.single_sample_dating ? SPLITFASTA.out.fastas : RENAMEFASTA.out.renamed_fasta
+    versions    = ch_versions
 }
 
 
