@@ -60,7 +60,8 @@ class BeastLogParser:
     
     def calculate_ess(self, values):
         """
-        Calculate Effective Sample Size using lag-1 autocorrelation.
+        Calculate Effective Sample Size using integrated autocorrelation time.
+        This method matches Tracer's implementation.
         
         Args:
             values: Array of MCMC samples
@@ -72,21 +73,38 @@ class BeastLogParser:
         if n < 2:
             return 0.0
         
-        # Calculate lag-1 autocorrelation
         mean_val = np.mean(values)
-        c0 = np.sum((values - mean_val) ** 2) / n
-        c1 = np.sum((values[:-1] - mean_val) * (values[1:] - mean_val)) / (n - 1)
+        variance = np.var(values, ddof=1)
         
-        if c0 == 0:
+        if variance == 0:
             return 0.0
         
-        rho = c1 / c0
+        # Calculate autocorrelation at multiple lags
+        max_lag = min(n - 1, int(n / 3))  # Don't go beyond n/3 lags
+        autocorr_sum = 0.0
         
-        # Calculate ESS
-        if rho < 1:
-            ess = n * (1 - rho) / (1 + rho)
-        else:
-            ess = 1.0
+        for lag in range(1, max_lag):
+            # Calculate autocorrelation at this lag
+            if n - lag < 1:
+                break
+                
+            autocovariance = np.sum((values[:-lag] - mean_val) * (values[lag:] - mean_val)) / n
+            autocorr = autocovariance / variance
+            
+            # Stop if autocorrelation becomes negative (standard practice)
+            if autocorr < 0:
+                break
+            
+            autocorr_sum += autocorr
+            
+            # Early stopping if autocorrelation becomes very small
+            if autocorr < 0.05:
+                break
+        
+        # Calculate ESS using integrated autocorrelation time
+        # ESS = n / (1 + 2 * sum(rho_k))
+        act = 1.0 + 2.0 * autocorr_sum  # Autocorrelation time
+        ess = n / act
         
         return max(ess, 1.0)
     
