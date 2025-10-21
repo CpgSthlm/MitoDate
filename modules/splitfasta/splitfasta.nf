@@ -1,26 +1,29 @@
 process SPLITFASTA {
-    // tag "$splitfasta"
+    tag "${fasta}"
     label 'process_low'
 
     conda "conda-forge::python=3.8.3"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/biopython%3A1.81' :
+        'oras://community.wave.seqera.io/library/biopython_openpyxl_pandas:fb650661820f6788' :
         'quay.io/biocontainers/python:3.8.3' }"
 
     input:
     path(fasta)
+    path(metadata)
 
     output:
-    path('*.fasta')             , emit: fastas
-    path('versions.yml')        , emit: versions
+    path('*TipDating*.fasta')             , emit: fastas
+    path('versions.yml')                   , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
 
     script: // This script is bundled with the pipeline, in {{ name }}/bin/
     """
-    split_fasta.py \\
-        ${fasta}
+    singleDatingMSA.py \\
+        -i ${fasta} \\
+        -m ${metadata} \\
+        -o ./
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
