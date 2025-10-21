@@ -5,7 +5,7 @@ nextflow.enable.dsl = 2
 
 // Import subworkflows
 
-include { FASTA_PROCESSING  } from "$projectDir/subworkflows/split_fasta/main"
+include { FASTA_PROCESSING  } from "$projectDir/subworkflows/fasta_processing/main"
 include { XML_PROCESSING    } from "$projectDir/subworkflows/xml_processing/main"
 include { RUN_BEAST         } from "$projectDir/subworkflows/run_beast/main"
 
@@ -14,7 +14,7 @@ include { RUN_BEAST         } from "$projectDir/subworkflows/run_beast/main"
 workflow {
 
     // Define workflow stages
-    def recognized_workflow_stages = ['single_sample_dating','generate_XML','run_beast']
+    def recognized_workflow_stages = ['fasta_processing','generate_XML','run_beast']
 
     // Check input
     def workflow_steps = params.steps.tokenize(",")
@@ -28,6 +28,7 @@ workflow {
     """)
 
     // Define input channels
+    Channel.fromPath(params.sample_metadata, checkIfExists: true).set { meta }
     Channel.fromPath(params.fasta, checkIfExists: true).set     { fasta }
     Channel.fromPath(params.priors, checkIfExists: true).set    { priors }
     Channel.fromPath(params.partition).set                      { partition }
@@ -36,22 +37,22 @@ workflow {
 
     // Split fasta file for single sample dating
 
-    if ( 'single_sample_dating' in workflow_steps ) {
-        FASTA_PROCESSING ( fasta )
+    if ( 'fasta_processing' in workflow_steps ) {
+        FASTA_PROCESSING ( fasta, meta )
     }
 
 
-    // Generate XML file
-    if ( 'generate_XML' in workflow_steps ) {
-        XML_PROCESSING ( FASTA_PROCESSING.out.fastas, priors, gff, partition,
-        params.chainlength, params.log_step, params.partition_list, params.nd_list, params.taxon_set
-        )
-    }
+    // // Generate XML file
+    // if ( 'generate_XML' in workflow_steps ) {
+    //     XML_PROCESSING ( FASTA_PROCESSING.out.fastas, priors, gff, partition,
+    //     params.chainlength, params.log_step, params.partition_list, params.nd_list, params.taxon_set
+    //     )
+    // }
 
-    // Run BEAST
-    if ( 'run_beast' in workflow_steps ) {
-       RUN_BEAST( XML_PROCESSING.out.xml )
-    }
+    // // Run BEAST
+    // if ( 'run_beast' in workflow_steps ) {
+    //    RUN_BEAST( XML_PROCESSING.out.xml )
+    // }
 
 }
 
