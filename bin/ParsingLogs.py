@@ -208,17 +208,35 @@ class BeastLogParser:
         
         
         # Print summary
-        print(f"\n=== Summary ===")
-        print(f"Total parameters: {len(df)}")
-        
-        sample_df = df[df['Parameter'].str.contains('age\(.*_ND\)', regex=True, na=False)]
+        summary_lines = [
+            "",
+            "=== Log Result Parsing Summary ===",
+            f"Total parameters: {len(df)}",
+        ]
+
+        sample_df = df[df['Parameter'].str.contains(r'age\(.*_ND\)', regex=True, na=False)]
         if len(sample_df) > 0:
-            print(f"Sample ages with _ND suffix: {len(sample_df)}")
-            print(f"\nESS Statistics for samples:")
-            print(f"  Mean ESS: {sample_df['ESS'].mean():.2f}")
-            print(f"  Min ESS: {sample_df['ESS'].min():.2f}")
-            print(f"  Max ESS: {sample_df['ESS'].max():.2f}")
-            print(f"  Samples with ESS < 200: {(sample_df['ESS'] < 200).sum()}")
+            summary_lines.extend([
+                f"Sample ages with _ND suffix: {len(sample_df)}",
+                "",
+                "ESS Statistics for samples:",
+                f"  Mean ESS: {sample_df['ESS'].mean():.2f}",
+                f"  Min ESS: {sample_df['ESS'].min():.2f}",
+                f"  Max ESS: {sample_df['ESS'].max():.2f}",
+                f"  Samples with ESS < 200: {(sample_df['ESS'] < 200).sum()}",
+            ])
+
+        # Print summary to stdout
+        for line in summary_lines:
+            print(line)
+
+        # Also save summary to a separate log file (text)
+        summary_log_path = output_file.with_suffix('.log')
+        with open(summary_log_path, 'w', encoding='utf-8') as fh:
+            fh.write("\n".join(summary_lines) + "\n")
+        print(f"Summary log saved to: {summary_log_path}")
+
+    
 
 
 def main():
@@ -244,8 +262,8 @@ def main():
     log_parser.save_results(df_results, output_file=args.output)
     
     # Display results
-    print("\n=== Results Preview ===")
-    print(df_results.to_string(index=False))
+    #print("\n=== Results Preview ===")
+    #print(df_results.to_string(index=False))
 
 
 if __name__ == "__main__":
