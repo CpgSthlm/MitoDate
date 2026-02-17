@@ -139,6 +139,7 @@ def main(argv=None):
         writer = csv.DictWriter(out_f, fieldnames=fieldnames)
         writer.writeheader()
         for row in results:
+            row["Sample_ID"] = row["Sample_ID"].split("_")[0]
             writer.writerow(row)
 
     print(f"Wrote {len(results)} rows to {args.output}")
