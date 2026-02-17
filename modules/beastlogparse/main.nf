@@ -12,7 +12,7 @@ process BEAST_LOG_PARSER {
 
     output:
     path('*.csv')               , emit: parsed_results
-    path('*.log')               , emit: parsed_log
+    path('*.parsed_log')        , emit: parsed_log
     path('versions.yml')        , emit: versions
 
     when:
@@ -21,13 +21,11 @@ process BEAST_LOG_PARSER {
     script: // This script is bundled with the pipeline, in {{ name }}/bin/
 
     def burnin      = task.ext.burnin ?: params.burnin
-    def output_name = beast_logs.baseName.replaceAll('.log', '')
-
     """
     ParsingLogs.py \\
         ${beast_logs} \\
         -b ${burnin} \\
-        -o ${output_name}
+        -o ${beast_logs}
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
