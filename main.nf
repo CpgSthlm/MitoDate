@@ -32,7 +32,7 @@ workflow {
     }
 
     if ( params.generate_XML.toBoolean() ) {
-        XML_PROCESSING ( FASTA_PROCESSING.out.fastas, metadata, priors)
+        XML_PROCESSING ( FASTA_PROCESSING.out.fastas.collect(), metadata, priors)
     }
 
     if ( params.run_beast.toBoolean() ) {
