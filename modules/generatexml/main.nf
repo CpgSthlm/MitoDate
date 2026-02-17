@@ -8,7 +8,7 @@ process GENERATEXML {
         'quay.io/biocontainers/python:3.8.3' }"
 
     input:
-    each path(fasta)
+    path(fasta)
     path(metadata)
     path(priors)
 
@@ -21,7 +21,7 @@ process GENERATEXML {
 
     script: // This script is bundled with the pipeline, in {{ name }}/bin/
 
-    def partition         = task.ext.partition ?: params.partition
+    def split_partition     = task.ext.split_partition ?: params.split_partition
     def substitution_model  = task.ext.substitution_model ?: params.substitution_model
     def root_mean           = task.ext.root_mean ?: params.root_mean
     def root_stdev          = task.ext.root_stdev ?: params.root_stdev
@@ -32,8 +32,8 @@ process GENERATEXML {
     def clock_model         = task.ext.clock_model ?: params.clock_model
     def root_offset         = task.ext.root_offset ?: params.root_offset
 
-    """
-    if (!partition) {
+    if (split_partition == 'false') {
+        """
         main_xml_generation.py \\
             -f ${fasta} \\
             -m ${metadata} \\
@@ -47,7 +47,13 @@ process GENERATEXML {
             --clock_model ${clock_model} \\
             --root_offset ${root_offset}
 
+        cat <<-END_VERSIONS > versions.yml
+        "${task.process}":
+            python: \$(python --version | sed 's/Python //g')
+        END_VERSIONS
+        """
     } else {
+        """
         main_xml_generation.py \\
             -f ${fasta} \\
             -m ${metadata} \\
@@ -62,14 +68,11 @@ process GENERATEXML {
             --population_model ${population_model} \\
             --clock_model ${clock_model} \\
             --root_offset ${root_offset}
+
+        cat <<-END_VERSIONS > versions.yml
+        "${task.process}":
+            python: \$(python --version | sed 's/Python //g')
+        END_VERSIONS
+        """
     }
-
-
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        python: \$(python --version | sed 's/Python //g')
-    END_VERSIONS
-    """
-
 }
