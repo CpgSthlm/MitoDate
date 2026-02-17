@@ -10,7 +10,8 @@ process BEAST {
     path(xml)
 
     output:
-    path('*')                   , emit: beast_output
+    path('*.log')               , emit: beast_out_log
+    path ('*.trees')            , emit: beast_out_trees
     path('versions.yml')        , emit: versions
 
     when:
