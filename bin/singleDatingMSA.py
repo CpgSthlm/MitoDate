@@ -45,7 +45,7 @@ def find_matching_sample(seq_name, sample_ids):
     # Exact match
     if seq_name in sample_ids:
         return seq_name
-    
+
     # Boundary matching
     for sample_id in sample_ids:
         sid_str = str(sample_id)
@@ -87,62 +87,62 @@ def process_sequences(input_file, sample_ids, metadata_dict):
 
 def main():
     args = get_file_paths()
-    
+
     print(f"Single Dating MSA Processing")
     print(f"Metadata: {args.metadata}")
     print(f"Input: {args.input}\n")
-    
+
     # Setup output directory
     output_dir = args.output_dir if hasattr(args, 'output_dir') and args.output_dir else os.path.dirname(args.input)
     os.makedirs(output_dir, exist_ok=True)
-    
+
     input_basename = os.path.splitext(os.path.basename(args.input))[0]
     output_file = os.path.join(output_dir, f"{input_basename}.DatedSamples.fasta")
-    
+
     # Validate files
     for path, name in [(args.metadata, "Metadata"), (args.input, "Alignment")]:
         if not os.path.exists(path):
             sys.exit(f"Error: {name} file not found: {path}")
-    
+
     # Load metadata
     print("Loading metadata...")
     metadata_df = pd.read_csv(args.metadata, sep='\t')
     print(f"  {len(metadata_df)} rows, columns: {list(metadata_df.columns)}")
-    
+
     # Filter dated sequences
     filtered_meta = metadata_df[metadata_df['Calibrated_yBP'] != 'ND'].copy()
     print(f"  {len(filtered_meta)} dated sequences")
-    
+
     if filtered_meta.empty:
         sys.exit("No dated sequences found")
-    
+
     # Process sequences
     print("\nProcessing sequences...")
     sample_ids = filtered_meta['Sample_ID'].tolist()
     metadata_dict = filtered_meta.set_index('Sample_ID').to_dict('index')
     filtered_seqs = process_sequences(args.input, sample_ids, metadata_dict)
-    
+
     if not filtered_seqs:
         sys.exit("No matching sequences found")
-    
+
     # Write output
     SeqIO.write(filtered_seqs, output_file, "fasta")
     print(f"\nWrote {len(filtered_seqs)} sequences to {output_file}")
-    
+
     # Process TipDating sequences
     tipdating_meta = metadata_df[metadata_df['TipDating'] == 'Y']
     if not tipdating_meta.empty:
         print(f"\nProcessing {len(tipdating_meta)} TipDating sequences...")
         all_seqs = {rec.id: rec for rec in SeqIO.parse(args.input, "fasta")}
         full_meta_dict = metadata_df.set_index('Sample_ID').to_dict('index')
-        
+
         for _, row in tipdating_meta.iterrows():
             sample_id = str(row['Sample_ID'])
             tipdating_file = os.path.join(output_dir, f"{input_basename}.TipDating.{sample_id}.fasta")
-            
+
             # Find matching sequence
             match_id = next((sid for sid in all_seqs if find_matching_sample(sid, [sample_id])), None)
-            
+
             if match_id:
                 new_name = create_new_name(full_meta_dict[sample_id], sample_id)
                 tipdating_rec = SeqRecord(all_seqs[match_id].seq, id=new_name, description="")
@@ -151,7 +151,7 @@ def main():
                 # print(f"  Created {sample_id}: {len(combined)} sequences")
             else:
                 print(f"  Warning: {sample_id} not found")
-    
+
     # Summary
     print(f"\nSummary:")
     print(f"  Total metadata rows: {len(metadata_df)}")

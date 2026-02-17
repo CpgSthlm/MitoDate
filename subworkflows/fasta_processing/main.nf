@@ -12,7 +12,7 @@ workflow FASTA_PROCESSING {
     ch_versions                 = Channel.empty()
 
     // Run single sample dating
-    if ( params.single_sample_dating ) {
+    if ( params.single_sample_dating.toBoolean() ) {
         SPLITFASTA ( fasta, metadata )
         ch_versions             = ch_versions.mix(SPLITFASTA.out.versions)
     }
@@ -23,7 +23,7 @@ workflow FASTA_PROCESSING {
 
 
     emit:
-    fastas      = params.single_sample_dating ? SPLITFASTA.out.fastas : RENAMEFASTA.out.renamed_fasta
+    fastas      = params.single_sample_dating ? SPLITFASTA.out.fastas.flatten() : RENAMEFASTA.out.renamed_fasta
     versions    = ch_versions
 }
 
