@@ -48,7 +48,7 @@ def calc_tip_branchLen(beast):
 
     tmrcaStatistic = ET.SubElement(beast, 'tmrcaStatistic', attrib={'id': 'age(root)', 'absolute': 'true'})
     ET.SubElement(tmrcaStatistic, 'treeModel').set('idref', 'treeModel')
-    f.make_comment(beast, ' Statistic for time of most recent common ancestor of tree ')
+    f.make_comment(beast, 'Statistic for time of most recent common ancestor of tree ')
 
 
 def calc_taxonSet_branchLen(beast, taxon_set):

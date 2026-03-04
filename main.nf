@@ -1,65 +1,91 @@
 #! /usr/bin/env nextflow
 
-// Analysis script for MitoChronos pipeline
 nextflow.enable.dsl = 2
 
-// Import subworkflows
+// Import modules
+include { RENAMEFASTA        } from "$projectDir/modules/rename_fastas/rename_fasta.nf"
+include { SPLITFASTA         } from "$projectDir/modules/splitfasta/splitfasta.nf"
+include { GENERATEXML        } from "$projectDir/modules/generatexml/main"
+include { BEAST              } from "$projectDir/modules/beast/main"
+include { BEAST_LOG_PARSER   } from "$projectDir/modules/beastlogparse/main"
+include { COLLECT_RESULTS    } from "$projectDir/modules/beastlogparse/collect_results"
 
-include { FASTA_PROCESSING  } from "$projectDir/subworkflows/split_fasta/main"
-include { XML_PROCESSING    } from "$projectDir/subworkflows/xml_processing/main"
-include { RUN_BEAST         } from "$projectDir/subworkflows/run_beast/main"
 
+// Define parameters
+params.rerun_beast_samples = null  // e.g., "sample1,sample2,sample3" or null for full run
 
+// Disable resume when rerunning specific samples
+if (params.rerun_beast_samples) {
+    resume = false
+}
 
 workflow {
 
-    // Define workflow stages
-    def recognized_workflow_stages = ['single_sample_dating','generate_XML','run_beast']
+    // Set the workflow name
+    def workflow_name = params.workflow_run_name ?: workflow.runName
 
-    // Check input
-    def workflow_steps = params.steps.tokenize(",")
-    if ( ! workflow_steps.every { it in recognized_workflow_stages } ) {
-        error "Unrecognised workflow step in $params.steps ( $recognized_workflow_stages )"
-    }
-
-    //
+    // Log the workflow name
     log.info("""
-    Running MitoChronos.
+    Running MitoDate. Workflow run name: $workflow_name
     """)
 
     // Define input channels
-    Channel.fromPath(params.fasta, checkIfExists: true).set     { fasta }
-    Channel.fromPath(params.priors, checkIfExists: true).set    { priors }
-    Channel.fromPath(params.partition).set                      { partition }
-    Channel.fromPath(params.gff).set                            { gff }
+    ch_metadata = Channel.fromPath(params.sample_metadata, checkIfExists: true).collect()
+    ch_fasta = Channel.fromPath(params.fasta, checkIfExists: true)
+    ch_priors = Channel.fromPath(params.priors, checkIfExists: true).collect()
 
+    //////////////////////////////////////////////////////////////////////////////////////////////
 
-    // Split fasta file for single sample dating
+    if (params.rerun_beast_samples) {
+        // Check if output directory exists
+        if (!file(params.outdir).exists()) {
+            error("Error: Output directory '${params.outdir}' not found. Run the full pipeline first.")
+        }
+        // Parse the sample list
+        sample_list = params.rerun_beast_samples.split(',').collect { it.trim() }
+        // Find XML files matching the sample list
+        xml_files = Channel.fromPath("${params.outdir}/02_xml/*.xml")
+            .filter { file ->
+                sample_list.any { sample -> file.name.contains(sample) }
+            }
+        // Check if any XML files were found
+        if (!xml_files) {
+            error("No XML files found matching samples: ${params.rerun_beast_samples}")
+        }
+        // Run BEAST on selected samples
+        BEAST( xml_files )
+        BEAST_LOG_PARSER( BEAST.out.beast_out_log )
+        COLLECT_RESULTS( BEAST_LOG_PARSER.out.parsed_results.collect() )
+    } else {
+        // FASTA PROCESSING
+        if ( params.fasta_processing.toBoolean() ) {
+            if ( params.single_sample_dating.toBoolean() ) {
+                SPLITFASTA( ch_fasta, ch_metadata )
+                ch_fastas = SPLITFASTA.out.fastas.flatten()
+            } else {
+                RENAMEFASTA( ch_fasta, ch_metadata )
+                ch_fastas = RENAMEFASTA.out.renamed_fasta
+            }
+        }
+        // XML GENERATION
+        if ( params.generate_XML.toBoolean() ) {
+            GENERATEXML( ch_fastas, ch_metadata, ch_priors )
+        }
 
-    if ( 'single_sample_dating' in workflow_steps ) {
-        FASTA_PROCESSING ( fasta )
+        // RUN BEAST
+        if ( params.run_beast.toBoolean() ) {
+            BEAST( GENERATEXML.out.xml )
+            BEAST_LOG_PARSER( BEAST.out.beast_out_log )
+            COLLECT_RESULTS( BEAST_LOG_PARSER.out.parsed_results.collect() )
+        }
     }
-
-
-    // Generate XML file
-    if ( 'generate_XML' in workflow_steps ) {
-        XML_PROCESSING ( FASTA_PROCESSING.out.fastas, priors, gff, partition,
-        params.chainlength, params.log_step, params.partition_list, params.nd_list, params.taxon_set
-        )
-    }
-
-    // Run BEAST
-    if ( 'run_beast' in workflow_steps ) {
-       RUN_BEAST( XML_PROCESSING.out.xml )
-    }
-
 }
 
 // Workflow completion
 workflow.onComplete {
     if( workflow.success ){
         log.info("""
-        Thank you for using MitoChronos.
+        Thank you for using MitoDate.
 
         Results are located in the results folder.
         """)

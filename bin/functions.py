@@ -4,7 +4,11 @@ from Bio import SeqIO
 import math
 
 
-class Taxa:  # should contain date, sequence, taxon set, tip priors
+class Taxa:
+    """
+    Class to represent a Taxon, including its name, date, direction, and units.
+    """
+
     def __init__(self, name, date, direction='backwards', units='years'):
         self.name = name
         self.date = date
@@ -12,7 +16,12 @@ class Taxa:  # should contain date, sequence, taxon set, tip priors
         self.units = units
 
 
-class Partition:  # should contain excluding, every three, clock model, substitution model
+class Partition:
+    """
+    Class representing a Partition with attributes for the partition, exclusion,
+    every three bases, and substitution model.
+    """
+
     def __init__(self, p, exclude, every3, subs_model):
         self.p = p
         self.exclude = exclude
@@ -20,8 +29,13 @@ class Partition:  # should contain excluding, every three, clock model, substitu
         self.subs_model = subs_model
 
 
-class Xml:  # should contain all the tags (the structure), population model, root height ...
-    def __init__(self, population_model, root_height_lower, root_height_mean, root_height_stdev, root_height_offset='0.0', units='years', ):
+class Xml:
+    """
+    Class for generating XML structure related to population model and root height information.
+    """
+
+    def __init__(self, population_model, root_height_lower, root_height_mean, root_height_stdev,
+                 root_height_offset='0.0', units='years'):
         self.units = units
         self.population_model = population_model
         self.root_height_lower = root_height_lower
@@ -31,31 +45,40 @@ class Xml:  # should contain all the tags (the structure), population model, roo
 
 
 def get_taxa_name(fasta):
+    """
+    Extracts taxa names from a FASTA file.
+    """
     taxa_name_list = []
-    with open(fasta, 'r') as fasta:
-        for line in fasta:
+    with open(fasta, 'r') as fasta_file:
+        for line in fasta_file:
             if line.startswith('>'):
                 taxa_name_list.append(str(line).strip('>').strip('\n'))
     return taxa_name_list
 
 
 def get_taxa_date(fasta, priors_table):
+    """
+    Extracts the taxa dates from a FASTA file, using a priors table for ND (No Date) taxa.
+    """
     taxa_date_list = []
-    with open(fasta, 'r') as fasta:
-        for line in fasta:
+    with open(fasta, 'r') as fasta_file:
+        for line in fasta_file:
             if line.startswith('>'):
                 taxa_name = str(line).strip('>').strip('\n')
-                if taxa_name.split('_')[-1] == 'ND':
-                    taxa_date_list.append(tip_date_table(priors_table)[taxa_name])
+                if taxa_name.split('_')[-1] == 'ND':  # If ND, use the date from priors_table
+                    taxa_date_list.append(tip_date_table(priors_table, fasta)[taxa_name])
                 else:
-                    taxa_date_list.append(taxa_name.split('_')[-1])
+                    taxa_date_list.append(taxa_name.split('_')[-1])  # Extract date from the name
     return taxa_date_list
 
 
 def get_ND_taxa(fasta):
+    """
+    Extracts taxa names with 'ND' suffix from a FASTA file.
+    """
     taxa_ND_list = []
-    with open(fasta, 'r') as fasta:
-        for line in fasta:
+    with open(fasta, 'r') as fasta_file:
+        for line in fasta_file:
             if line.startswith('>'):
                 taxa_name = str(line).strip('>').strip('\n')
                 if taxa_name.split('_')[-1] == 'ND':
@@ -64,139 +87,165 @@ def get_ND_taxa(fasta):
 
 
 def get_taxa_sequence(fasta):
+    """
+    Parses the sequences from a FASTA file and returns them in a dictionary format.
+    """
     fa_dict = SeqIO.to_dict(SeqIO.parse(fasta, 'fasta'))
     return fa_dict
 
 
-def get_tip_priors(priors_table):
-    with open(priors_table, 'r') as priors:
-        priors_table = pd.read_csv(priors, header=0)
-        tip_taxa = priors_table['taxa'].values.tolist()
-        tip_prior = priors_table['prior'].values.tolist()
-        tip_mu_lower = priors_table['mu/lower'].values.tolist()
-        tip_sigma_upper = priors_table['sigma/upper'].values.tolist()
-        tip_offset = priors_table['offset'].values.tolist()
+def get_tip_priors(priors_table, fasta):
+    """
+    Reads a priors table and returns a dictionary of tip priors for each taxa.
+    """
+    with open(priors_table, 'r') as priors_file:
+        priors_df = pd.read_csv(priors_file, header=0)
+        short_taxa = priors_df['taxa'].values.tolist()
+        fasta_taxa = get_taxa_name(fasta)
+        
+        tip_taxa = []
+        matched_indices = []
+        
+        for i, taxa in enumerate(short_taxa):
+            matching_fasta_names = [name for name in fasta_taxa if name.startswith(taxa)]
+            if matching_fasta_names:
+                tip_taxa.append(matching_fasta_names[0])
+                matched_indices.append(i)
+    
+        tip_prior = priors_df['prior'].values.tolist()
+        tip_mu_lower = priors_df['mu/lower'].values.tolist()
+        tip_sigma_upper = priors_df['sigma/upper'].values.tolist()
+        tip_offset = priors_df['offset'].values.tolist()
 
-        tip_priors_list = []
-        for i in range(0, len(tip_taxa)):
-            priors = [tip_prior[i], tip_mu_lower[i], tip_sigma_upper[i], tip_offset[i]]
-            tip_priors_list.append(priors)
-    tip_priors_dict = dict(zip(tip_taxa, tip_priors_list))
-    return tip_priors_dict
+        tip_priors_list = [
+            [tip_prior[i], tip_mu_lower[i], tip_sigma_upper[i], tip_offset[i]]
+            for i in range(len(tip_taxa))
+        ]
+
+    return dict(zip(tip_taxa, tip_priors_list))
 
 
-def tip_date_table(priors_table):
-    with open(priors_table, 'r') as priors:
-        priors_table = pd.read_csv(priors, header=0)
-        tip_taxa = priors_table['taxa'].values.tolist()
-        tip_date = priors_table['date'].values.tolist()
-        tip_date_dict = dict(zip(tip_taxa, tip_date))
-    return tip_date_dict
+def tip_date_table(priors_table, fasta):
+    """
+    Reads a priors table and returns a dictionary of taxa names to their dates.
+    """
+    with open(priors_table, 'r') as priors_file:
+        priors_df = pd.read_csv(priors_file, header=0)
+        short_taxa = priors_df['taxa'].values.tolist()
+        fasta_taxa = get_taxa_name(fasta)
+        
+        tip_taxa = []
+        matched_indices = []
+        
+        for i, taxa in enumerate(short_taxa):
+            matching_fasta_names = [name for name in fasta_taxa if name.startswith(taxa)]
+            if matching_fasta_names:
+                tip_taxa.append(matching_fasta_names[0])
+                matched_indices.append(i)
+        
+        tip_date = priors_df['date'].values.tolist()
 
-
-def read_partition(gff):
-    global seq_type, start, end, df3
-    with open(gff, 'r') as f:
-        for line in f:
-            if line.startswith('#'):
-                continue
-            else:
-                gene_future = pd.read_table(f, header=None)
-                gene_future.columns = ['genome_id', 'source',
-                                       'type', 'start', 'end',
-                                       'uk', 'uk1', 'uk1', 'more_info']
-                df1 = gene_future.loc[:, ['type', 'start']]
-                df2 = gene_future.loc[:, ['type', 'end']]
-                df3 = gene_future.loc[:, ['type', 'genome_id']]
-
-                seq_type = df3['type'].values.tolist()
-                start = df1['start'].values.tolist()
-                end = df2['end'].values.tolist()
-    return seq_type, start, end
+    return dict(zip(tip_taxa, tip_date))
 
 
 def get_partition(taxa, partition, fasta, gff):
-    read_partition(gff)
-    p_start = []
-    p_end = []
-    for a in range(0, len(seq_type)):
-        if seq_type[a] == partition:
-            p_start.append(start[a])
-            p_end.append(end[a])
-    if len(p_end) == 1:
-        s = [p_start[0] - 1]
-        e = [p_end[0]]
-    else:
-        s = [p_start[0] - 1]
-        e = [p_end[0]]
-        for i in range(1, len(p_end)):
-            if p_start[i] > p_end[i - 1]:
-                s.append(p_start[i] - 1)
-                e.append(p_end[i])
-            else:
-                s.pop()
-                e.pop()
-                s.append(p_start[i - 1] - 1)
-                e.append(p_end[i])
-    p_list = []
-    for i in range(0, len(s)):
-        s_num = s[i]
-        e_num = e[i]
-        p = str(get_taxa_sequence(fasta)[taxa][s_num:e_num].seq).upper()
-        p_list.append(p)
-    return ''.join(p_list)
+    """
+    Returns the sequence for a specified partition from a FASTA file, excluding others.
+    """
+    # Read and parse the GFF file into a DataFrame
+    gff_df = pd.read_table(gff, comment='#', header=None,
+                           names=['seqid', 'source', 'type', 'start', 'end', 'score', 'strand', 'phase', 'attributes'])
+
+    # Filter the GFF DataFrame to get rows that match the partition type
+    partition_df = gff_df[gff_df['type'] == partition]
+
+    # Extract start and end positions for the matching partition
+    start_positions = partition_df['start'].values - 1  # Convert to 0-based indexing
+    end_positions = partition_df['end'].values
+
+    # Extract the corresponding sequences from the FASTA file
+    fa_dict = SeqIO.to_dict(SeqIO.parse(fasta, 'fasta'))
+    sequences = [str(fa_dict[taxa][start:end].seq).upper() for start, end in zip(start_positions, end_positions)]
+
+    return ''.join(sequences)
 
 
 def partition_exclude(taxa, partition_name, partition_exclude, fasta, gff):
-    read_partition(gff)
-    p_start = []
-    p_end = []
-    for a in range(0, len(seq_type)):
-        if seq_type[a] == partition_name:
-            p_start = int(start[a] - 1)
-            p_end = int(end[a])
-        if seq_type[a] == partition_exclude:
-            s_VNTR = int(start[a])
-            e_VNTR = int(end[a] - 1)
-    s = [p_start, e_VNTR]
-    e = [s_VNTR, p_end]
-    p_list = []
-    for i in range(0, len(s)):
-        s_num = s[i]
-        e_num = e[i]
-        partition = str(get_taxa_sequence(fasta)[taxa][s_num:e_num].seq).upper()
-        p_list.append(partition)
-    return ''.join(p_list)
+    """
+    Returns the sequence for a partition excluding certain regions specified by partition_exclude.
+    """
+    # Read and parse the GFF file into a DataFrame
+    gff_df = pd.read_table(gff, comment='#', header=None,
+                           names=['seqid', 'source', 'type', 'start', 'end', 'score', 'strand', 'phase', 'attributes'])
+
+    # Extract the start and end positions for the specified partition
+    partition_df = gff_df[gff_df['type'] == partition_name]
+    exclude_df = gff_df[gff_df['type'] == partition_exclude]
+
+    # Get the partition start and end positions
+    p_start = partition_df['start'].values - 1  # 0-based indexing
+    p_end = partition_df['end'].values
+
+    # Get the exclusion region start and end positions
+    exclude_start = exclude_df['start'].values
+    exclude_end = exclude_df['end'].values - 1  # 0-based indexing
+
+    # Combine the partition and exclusion regions into separate lists
+    s = [p_start[0], exclude_end[0]]
+    e = [exclude_start[0], p_end[0]]
+
+    # Extract the corresponding sequences from the FASTA file
+    fa_dict = SeqIO.to_dict(SeqIO.parse(fasta, 'fasta'))
+    sequences = [str(fa_dict[taxa][start:end].seq).upper() for start, end in zip(s, e)]
+
+    return ''.join(sequences)
 
 
 def get_partition_info(partition_file):
+    """
+    Reads the partition file and returns the partition information as a tuple.
+    """
     with open(partition_file, 'rb') as p:
-        partition_table = pd.read_excel(p, header=0)
-        p_name = partition_table['Partition'].values.tolist()
-        p_exclude = partition_table['Exclude'].values.tolist()
-        p_every3 = partition_table['Every3'].values.tolist()
-        susb_model = partition_table['SubstitutionModel'].values.tolist()
+        partition_df = pd.read_excel(p, header=0)
+        p_name = partition_df['Partition'].values.tolist()
+        p_exclude = partition_df['Exclude'].values.tolist()
+        p_every3 = partition_df['Every3'].values.tolist()
+        susb_model = partition_df['SubstitutionModel'].values.tolist()
+
     return zip(p_name, p_exclude, p_every3, susb_model)
 
 
 def get_partition_name(partition_file):
+    """
+    Reads the partition file and returns a list of partition names.
+    """
     with open(partition_file, 'rb') as p:
-        partition_table = pd.read_excel(p, header=0)
-        p_name = partition_table['Partition'].values.tolist()
+        partition_df = pd.read_excel(p, header=0)
+        p_name = partition_df['Partition'].values.tolist()
+
     return p_name
 
 
 def skygrid_cutoff(a):
+    """
+    Returns the cutoff value for skygrid computation based on the input number.
+    """
     x = (int(list(str(a))[0]) + 1) * (math.pow(10, len(str(round(a))) - 1))
     return x
 
 
 def make_comment(tag, text, line=-1):
+    """
+    Adds a comment to an XML element at the specified line number.
+    """
     comments = ET.Comment(text)
     tag.insert(line, comments)
 
 
 def pretty_xml(element, level=0):
+    """
+    Formats XML for pretty printing.
+    """
     i = '\n' + '\t' * (level + 1)
     if element:
         if (element.text is None) or element.text.isspace():
