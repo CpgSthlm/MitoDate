@@ -1,9 +1,9 @@
 process GENERATEXML {
     tag "${fasta}"
-    label 'process_low'
+    label 'process_generate_xml'
 
     conda "conda-forge::python=3.8.3"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+    container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
         'oras://community.wave.seqera.io/library/biopython_openpyxl_pandas:fb650661820f6788' :
         'quay.io/biocontainers/python:3.8.3' }"
 

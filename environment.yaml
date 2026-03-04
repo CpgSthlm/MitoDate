@@ -1,8 +1,8 @@
-name: MitoChronos
+name: MitoDate
 channels:
     - conda-forge
     - bioconda
     - defaults
 dependencies:
-    - nextflow=23.04.1
+    - nextflow=25.10.0
     - nf-core=2.9

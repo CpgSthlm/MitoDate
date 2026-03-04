@@ -1,9 +1,9 @@
 process BEAST_LOG_PARSER {
     tag "${beast_logs.baseName}"
-    label 'process_medium'
+    label 'process_beast_log_parser'
 
     conda "conda-forge::python=3.8.3, "
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+    container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
         'oras://community.wave.seqera.io/library/numpy_pandas_pathlib:4292f4f6e675421b' :
         'community.wave.seqera.io/library/numpy_pandas_pathlib:09d913c976849beb' }"
 

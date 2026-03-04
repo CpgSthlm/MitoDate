@@ -1,9 +1,9 @@
 process COLLECT_RESULTS {
-    tag "${workflow.runName}"
-    label 'process_low'
+    tag "${params.workflow_timestamp}"
+    label 'process_collect_results'
 
     conda "conda-forge::biopython=1.81"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+    container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
         'oras://community.wave.seqera.io/library/biopython_openpyxl_pandas:fb650661820f6788' :
         'quay.io/biocontainers/python:3.8.3' }"
 
@@ -22,7 +22,7 @@ process COLLECT_RESULTS {
     """
     CollectResults.py \\
         ${csv} \\
-        -o ${workflow.runName}_ageSummary.csv
+        -o Results_ageSummary.csv
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
