@@ -113,8 +113,8 @@ def get_tip_priors(priors_table, fasta):
                 matched_indices.append(i)
     
         tip_prior = priors_df['prior'].values.tolist()
-        tip_mu_lower = priors_df['mu/lower'].values.tolist()
-        tip_sigma_upper = priors_df['sigma/upper'].values.tolist()
+        tip_mu_lower = priors_df['param1'].values.tolist()
+        tip_sigma_upper = priors_df['param2'].values.tolist()
         tip_offset = priors_df['offset'].values.tolist()
 
         tip_priors_list = [
