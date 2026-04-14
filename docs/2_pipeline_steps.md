@@ -44,7 +44,9 @@ XML files serve as the complete specification for BEAST analysis.
 
 ## BEAST Analysis
 
-This workflow performs Bayesian phylogenetic inference using BEAST 1.10.4:
+This workflow performs Bayesian phylogenetic inference using
+BEAST 1.10.4. For more details of BEAST, please check:
+https://beast.community/about
 
 - Runs MCMC sampling to explore parameter space
 - Estimates divergence times (root age) for samples
@@ -56,7 +58,7 @@ Output files:
 - `*.log` - Parameter trace file with MCMC samples
 - `*.trees` - Sampled phylogenetic trees in Newick format
 
-**Computation time** depends on dataset size and chain length:
+**Computation time** depends on dataset size and chain length. For example, if 100 million iterations are used:
 
 - Small datasets (5-20 sequences): 1-6 hours
 - Medium datasets (50-100 sequences): 12-48 hours
@@ -68,8 +70,8 @@ This workflow extracts and summarizes results from BEAST analysis:
 
 **BEAST Log Parser**:
 Reads the parameter trace file (`.log`) from each BEAST run and
-calculates summary statistics including mean, median, and 95%
-credible intervals for all parameters. Computes effective sample
+calculates summary statistics including mean, and 95%
+highest posterior density (HPD) intervals for all parameters. Computes effective sample
 size (ESS) to assess convergence quality.
 
 **Result Collection**:
@@ -78,9 +80,10 @@ table (`combined_results.csv`). Combines BEAST estimates with original
 metadata for easy interpretation.
 
 **Output** (`combined_results.csv`):
-- Sample identifiers and metadata
-- Root age estimates (mean and 95% credible interval)
-- Effective sample size (ESS)
+- Sample ID
+- Effective sample size (ESS) for `joint`, `prior`, and `likelihood`
+- Root age estimates (mean and ESS)
+- Sample age estimates (mean, stdev, 95% HPD, and ESS)
 - Other parameter estimates
 
 ---
