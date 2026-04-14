@@ -89,5 +89,5 @@ metadata for easy interpretation.
 ---
 
 **See Also**:
-- [How to Run MitoDate](3.-How-to-run-MitoDate) - Execution guide
-- [Requirements and Configuration](1.-Pipeline-requirements-and-configuration) - Configuration options
+- [How to Run MitoDate](3_how_to_run.md) - Execution guide
+- [Requirements and Configuration](1_requirements_and_configuration.md) - Configuration options

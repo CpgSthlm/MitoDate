@@ -1,4 +1,3 @@
-
 # Requirements
 
 ## Input Data
@@ -9,9 +8,9 @@ are provided in separate files. Compressed files (gzip or
 bzip2) are supported and will be automatically uncompressed.
 
 Input data must be organized as described in
-[Sample Metadata](1.-Pipeline-requirements-and-configuration#sample-metadata),
-[FASTA Sequences](1.-Pipeline-requirements-and-configuration#fasta-sequences),
-[Priors File](1.-Pipeline-requirements-and-configuration#priors-file).
+[Sample Metadata](1_requirements_and_configuration.md#sample-metadata),
+[FASTA Sequences](1_requirements_and_configuration.md#fasta-sequences),
+[Priors File](1_requirements_and_configuration.md#priors-file).
 
 ## Computational Requirements
 
@@ -41,7 +40,7 @@ highly recommended to keep Nextflow running in the background.
 Ensure sufficient storage space, as the pipeline generates
 many large intermediate files in the `work` directory.
 Temporary files can be deleted after successful completion,
-see [Data Cleanup](4.-data-cleanup).
+see [Data Cleanup](4_data_cleanup.md).
 
 
 # Configuration
@@ -105,7 +104,7 @@ template configuration file is available at `assets/custom.config`.
 It is recommended to make a copy and modify it according to
 your needs.
 
-See [How to Run MitoDate](3.-How-to-run-MitoDate) for detailed parameter descriptions
+See [How to Run MitoDate](3_how_to_run.md) for detailed parameter descriptions
 and use cases.
 
 ## Compute Resources Configuration
