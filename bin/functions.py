@@ -107,14 +107,14 @@ def get_tip_priors(priors_table, fasta):
         matched_indices = []
         
         for i, taxa in enumerate(short_taxa):
-            matching_fasta_names = [name for name in fasta_taxa if name.startswith(taxa)]
+            matching_fasta_names = [name for name in fasta_taxa if name.split('_')[0] == taxa]
             if matching_fasta_names:
                 tip_taxa.append(matching_fasta_names[0])
                 matched_indices.append(i)
     
         tip_prior = priors_df['prior'].values.tolist()
-        tip_mu_lower = priors_df['mu/lower'].values.tolist()
-        tip_sigma_upper = priors_df['sigma/upper'].values.tolist()
+        tip_mu_lower = priors_df['param1'].values.tolist()
+        tip_sigma_upper = priors_df['param2'].values.tolist()
         tip_offset = priors_df['offset'].values.tolist()
 
         tip_priors_list = [
@@ -138,7 +138,7 @@ def tip_date_table(priors_table, fasta):
         matched_indices = []
         
         for i, taxa in enumerate(short_taxa):
-            matching_fasta_names = [name for name in fasta_taxa if name.startswith(taxa)]
+            matching_fasta_names = [name for name in fasta_taxa if name.split('_')[0] == taxa]
             if matching_fasta_names:
                 tip_taxa.append(matching_fasta_names[0])
                 matched_indices.append(i)
