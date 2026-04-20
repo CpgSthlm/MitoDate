@@ -35,10 +35,11 @@ def build_treeModel(beast, fasta):
     nodeHeights.set('rootNode', 'true')
     ET.SubElement(nodeHeights, 'parameter').set('id', 'treeModel.allInternalNodeHeights')
 
-    for sample in f.get_ND_taxa(fasta):
-        leafHeight = ET.SubElement(treeModel, 'leafHeight')
-        leafHeight.set('taxon', sample)
-        ET.SubElement(leafHeight, 'parameter').set('id', 'age({})'.format(sample))
+    if f.get_ND_taxa(fasta) is not None:
+        for sample in f.get_ND_taxa(fasta):
+            leafHeight = ET.SubElement(treeModel, 'leafHeight')
+            leafHeight.set('taxon', sample)
+            ET.SubElement(leafHeight, 'parameter').set('id', 'age({})'.format(sample))
 
 
 def calc_tip_branchLen(beast):

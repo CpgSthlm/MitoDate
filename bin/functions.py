@@ -16,6 +16,18 @@ class Taxa:
         self.units = units
 
 
+class Taxa_joint:
+    """
+    Class to represent a Taxon for the joint tree, including its name, age, and age uncertainty.
+    """
+    def __init__(self, name, date, uncertainty, direction='backwards', units='years'):
+        self.name = name
+        self.date = date
+        self.uncertainty = uncertainty
+        self.direction = direction
+        self.units = units
+
+
 class Partition:
     """
     Class representing a Partition with attributes for the partition, exclusion,
@@ -70,6 +82,31 @@ def get_taxa_date(fasta, priors_table):
                 else:
                     taxa_date_list.append(taxa_name.split('_')[-1])  # Extract date from the name
     return taxa_date_list
+
+
+def get_taxa_date_joint(fasta, joint_tree_meta):
+    """
+    Extract taxa Age / Age_Uncertainty for a FASTA file from a joint tree
+    metadata table.
+    """
+    if isinstance(joint_tree_meta, dict):
+        meta = joint_tree_meta
+    else:
+        sep = '\t' if str(joint_tree_meta).lower().endswith(('.tsv', '.tab', '.txt')) else ','
+        df = pd.read_csv(joint_tree_meta, sep=sep, dtype={'Sample_ID': str})
+        meta = df.set_index('Sample_ID').to_dict(orient='index')
+
+    taxa_date_joint_list = []
+    taxa_date_joint_uncertainty_list = []
+
+    with open(fasta, 'r') as fasta_file:
+        for line in fasta_file:
+            if line.startswith('>'):
+                sample_id = line[1:].strip().split('_')[0]
+                row = meta[sample_id]
+                taxa_date_joint_list.append(row['Age'])
+                taxa_date_joint_uncertainty_list.append(row['Age_Uncertainty'])
+    return taxa_date_joint_list, taxa_date_joint_uncertainty_list
 
 
 def get_ND_taxa(fasta):

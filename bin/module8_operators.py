@@ -10,7 +10,8 @@ def build_operator(beast, partition_file, fasta, split_partition):
     strict_clock(operators, partition_file, split_partition)
     treeModel(operators)
     skygrid(operators)
-    tip(operators, fasta)
+    if f.get_ND_taxa(fasta) is not None:
+        tip(operators, fasta)
 
 
 def subsModel_HKY(operators, partition_file, split_partition):
