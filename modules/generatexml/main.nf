@@ -63,7 +63,7 @@ process GENERATEXML {
             --root_stdev ${root_stdev} \\
             --chain_length ${chain_length} \\
             --log_every ${log_every} \\
-            --split_partition true \\
+            --split_partition \\
             --annotation ${gff} \\
             --population_model ${population_model} \\
             --clock_model ${clock_model} \\
