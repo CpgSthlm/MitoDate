@@ -16,30 +16,21 @@ include { TREE_ANNOTATOR            } from "$projectDir/modules/tree_annotator/m
 include { JOINT_TREE_VISUALIZE      } from "$projectDir/modules/joint_tree_visualize/main"
 
 
-// Define parameters
-params.rerun_beast_samples = null  // e.g., "sample1,sample2,sample3" or null for full run
-params.final_dated_tree    = false // run the joint dated-tree step as a standalone mode
-params.age_summary_file    = null  // required with --final_dated_tree: path to Results_ageSummary.csv
-
-// Disable resume when rerunning specific samples
-if (params.rerun_beast_samples) {
-    resume = false
-}
-
 workflow {
 
     // Set the workflow name
     def workflow_name = params.workflow_run_name ?: workflow.runName
 
-    log.info("""
-    Running MitoDate. Workflow run name: $workflow_name
-    """)
+    log.info("""\tWorkflow run name: $workflow_name\n""")
 
     //////////////////////////////////////////////////////////////////////////////////////////////
     // MODE 1 — Main run of the pipeline
     //////////////////////////////////////////////////////////////////////////////////////////////
 
     if (!params.rerun_beast_samples && !params.final_dated_tree.toBoolean()) {
+
+        log.info("""\tRunning MitoDate Mode 1: Tip-dating samples with BEAST\n""")
+
         ch_metadata = Channel.fromPath(params.sample_metadata,  checkIfExists: true).collect()
         ch_fasta    = Channel.fromPath(params.fasta,            checkIfExists: true)
         ch_priors   = Channel.fromPath(params.priors,           checkIfExists: true).collect()
@@ -72,16 +63,29 @@ workflow {
     //////////////////////////////////////////////////////////////////////////////////////////////
 
     } else if (params.rerun_beast_samples) {
+
+        log.info("""\tMode 2: Rerunning BEAST for specific samples: ${params.rerun_beast_samples}""")
+        log.info("""\tNote: Process cache is disabled for GENERATEXML, BEAST_DATING, BEAST_LOG_PARSER, and COLLECT_RESULTS\n""")
+
         if (!file(params.outdir).exists()) {
-            error("Output directory '${params.outdir}' not found. Run the MODE 1 pipeline first.")
+            error("\tError: Output directory '${params.outdir}' not found. Run the MODE 1 pipeline first.\n" +
+                "\tMake sure to provide the same --outdir in the config file as in the original run.\n")
         }
+
+        ch_metadata = Channel.fromPath(params.sample_metadata, checkIfExists: true).collect()
+        ch_priors   = Channel.fromPath(params.priors,          checkIfExists: true).collect()
+
         sample_list = params.rerun_beast_samples.split(',').collect { it.trim() }
-        xml_files = Channel.fromPath("${params.outdir}/02_xml/*.xml")
+
+        fasta_files = Channel.fromPath("${params.outdir}/01_fastas/*.fasta")
             .filter { file ->
                 sample_list.any { sample -> file.name.contains(sample) }
             }
-            .ifEmpty { error("No XML files found matching samples: ${params.rerun_beast_samples}") }
-        BEAST_DATING( xml_files )
+            .ifEmpty { error("\tError: No FASTA files found in ${params.outdir}/01_fastas matching samples: ${params.rerun_beast_samples}. Run MODE 1 with fasta processing first.") }
+
+        // Regenerate XML, rerun BEAST, and collect results for the specified samples
+        GENERATEXML( fasta_files, ch_metadata, ch_priors )
+        BEAST_DATING( GENERATEXML.out.xml )
         BEAST_LOG_PARSER( BEAST_DATING.out.beast_out_log )
         COLLECT_RESULTS( BEAST_LOG_PARSER.out.parsed_results.collect() )
 
@@ -90,14 +94,17 @@ workflow {
     //////////////////////////////////////////////////////////////////////////////////////////////
 
     } else if (params.final_dated_tree.toBoolean()) {
+
+        log.info("""\tMode 3: Building a date-calibrated tree using the estimated tip dates\n""")
+
         if (!params.age_summary_file) {
             error(
-                "Please provide --age_summary_file pointing to a Results_ageSummary.csv from a completed run, e.g.:\n" +
-                "--age_summary_file ${params.outdir}/05_age_summary/run_<timestamp>/Results_ageSummary.csv"
+                "\tError: Please provide --age_summary_file pointing to a Results_ageSummary.csv from a completed run, e.g.:\n" +
+                "\t--age_summary_file ${params.outdir}/05_age_summary/run_<timestamp>/Results_ageSummary.csv"
             )
         }
         if (!file(params.outdir).exists()) {
-            error("Output directory '${params.outdir}' not found. Run the full pipeline first.")
+            error("\tError: Output directory '${params.outdir}' not found. Run the full pipeline first.")
         }
 
         ch_metadata    = Channel.fromPath(params.sample_metadata, checkIfExists: true).collect()
