@@ -27,7 +27,7 @@ workflow {
     // MODE 1 — Main run of the pipeline
     //////////////////////////////////////////////////////////////////////////////////////////////
 
-    if (!params.rerun_tip_dating && !params.final_dated_tree.toBoolean()) {
+    if (!params.rerun_tip_dating && !params.make_tree.toBoolean()) {
 
         log.info("""\tRunning MitoDate Mode 1: Tip-dating samples with BEAST\n""")
 
@@ -94,7 +94,7 @@ workflow {
     // MODE 3 — Date calibrated Tree (after reviewing tip-dating results)
     //////////////////////////////////////////////////////////////////////////////////////////////
 
-    } else if (params.final_dated_tree.toBoolean()) {
+    } else if (params.make_tree.toBoolean()) {
 
         log.info("""\tMode 3: Building a date-calibrated tree using the estimated tip dates\n""")
 
