@@ -54,11 +54,11 @@ root_age,normal,50000,5000,0,100000
 
 ## Rerun Specific Samples
 
-Rerun BEAST analysis for specific samples without reprocessing:
+Rerun tip-dating BEAST analysis for specific samples without reprocessing:
 
 ```bash
 nextflow run -c custom.config -profile dardel main.nf \
-    --rerun_beast_samples "sample1,sample2,sample3"
+    --rerun_tip_dating "sample1,sample2,sample3"
 ```
 
 ## HPC Profiles

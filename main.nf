@@ -6,12 +6,12 @@ nextflow.enable.dsl = 2
 include { RENAMEFASTA               } from "$projectDir/modules/rename_fastas/rename_fasta.nf"
 include { SPLITFASTA                } from "$projectDir/modules/splitfasta/splitfasta.nf"
 include { GENERATEXML               } from "$projectDir/modules/generatexml/main"
-include { BEAST as BEAST_DATING     } from "$projectDir/modules/beast/main"
+include { BEAST as BEAST_TIP_DATING } from "$projectDir/modules/beast/main"
 include { BEAST_LOG_PARSER          } from "$projectDir/modules/beastlogparse/main"
 include { COLLECT_RESULTS           } from "$projectDir/modules/beastlogparse/collect_results"
 include { JOINT_TREE_META           } from "$projectDir/modules/joint_tree_meta/main"
 include { JOINT_XML                 } from "$projectDir/modules/joint_xml/main"
-include { BEAST as BEAST_TREE       } from "$projectDir/modules/beast/main"
+include { BEAST as BEAST_JOINT_TREE } from "$projectDir/modules/beast/main"
 include { TREE_ANNOTATOR            } from "$projectDir/modules/tree_annotator/main"
 include { JOINT_TREE_VISUALIZE      } from "$projectDir/modules/joint_tree_visualize/main"
 
@@ -27,7 +27,7 @@ workflow {
     // MODE 1 — Main run of the pipeline
     //////////////////////////////////////////////////////////////////////////////////////////////
 
-    if (!params.rerun_beast_samples && !params.final_dated_tree.toBoolean()) {
+    if (!params.rerun_tip_dating && !params.final_dated_tree.toBoolean()) {
 
         log.info("""\tRunning MitoDate Mode 1: Tip-dating samples with BEAST\n""")
 
@@ -53,8 +53,8 @@ workflow {
 
         // RUN BEAST
         if ( params.run_beast.toBoolean() ) {
-            BEAST_DATING( GENERATEXML.out.xml )
-            BEAST_LOG_PARSER( BEAST_DATING.out.beast_out_log )
+            BEAST_TIP_DATING( GENERATEXML.out.xml )
+            BEAST_LOG_PARSER( BEAST_TIP_DATING.out.beast_out_log )
             COLLECT_RESULTS( BEAST_LOG_PARSER.out.parsed_results.collect() )
         }
 
@@ -62,31 +62,32 @@ workflow {
     // MODE 2 — Rerun BEAST for specific samples
     //////////////////////////////////////////////////////////////////////////////////////////////
 
-    } else if (params.rerun_beast_samples) {
+    } else if (params.rerun_tip_dating) {
 
-        log.info("""\tMode 2: Rerunning BEAST for specific samples: ${params.rerun_beast_samples}""")
-        log.info("""\tNote: Process cache is disabled for GENERATEXML, BEAST_DATING, BEAST_LOG_PARSER, and COLLECT_RESULTS\n""")
+        log.info("""\tMode 2: Rerunning tip-dating BEAST for specific samples: ${params.rerun_tip_dating}""")
+        log.info("""\tNote: Process cache is disabled for GENERATEXML, BEAST_TIP_DATING, BEAST_LOG_PARSER, and COLLECT_RESULTS\n""")
 
         if (!file(params.outdir).exists()) {
             error("\tError: Output directory '${params.outdir}' not found. Run the MODE 1 pipeline first.\n" +
-                "\tMake sure to provide the same --outdir in the config file as in the original run.\n")
+                "\tMake sure to provide the same --outdir in the config file as in the original run," +
+                "\tbecause the rerun will look for FASTA files in ${params.outdir}/01_fastas/\n")
         }
 
         ch_metadata = Channel.fromPath(params.sample_metadata, checkIfExists: true).collect()
         ch_priors   = Channel.fromPath(params.priors,          checkIfExists: true).collect()
 
-        sample_list = params.rerun_beast_samples.split(',').collect { it.trim() }
+        sample_list = params.rerun_tip_dating.split(',').collect { it.trim() }
 
         fasta_files = Channel.fromPath("${params.outdir}/01_fastas/*.fasta")
             .filter { file ->
                 sample_list.any { sample -> file.name.contains(sample) }
             }
-            .ifEmpty { error("\tError: No FASTA files found in ${params.outdir}/01_fastas matching samples: ${params.rerun_beast_samples}. Run MODE 1 with fasta processing first.") }
+            .ifEmpty { error("\tError: No FASTA files found in ${params.outdir}/01_fastas matching samples: ${params.rerun_tip_dating}. Run MODE 1 with fasta processing first.") }
 
         // Regenerate XML, rerun BEAST, and collect results for the specified samples
         GENERATEXML( fasta_files, ch_metadata, ch_priors )
-        BEAST_DATING( GENERATEXML.out.xml )
-        BEAST_LOG_PARSER( BEAST_DATING.out.beast_out_log )
+        BEAST_TIP_DATING( GENERATEXML.out.xml )
+        BEAST_LOG_PARSER( BEAST_TIP_DATING.out.beast_out_log )
         COLLECT_RESULTS( BEAST_LOG_PARSER.out.parsed_results.collect() )
 
     //////////////////////////////////////////////////////////////////////////////////////////////
@@ -121,10 +122,10 @@ workflow {
         )
 
         // 3. Run BEAST for the joint dated tree
-        BEAST_TREE( JOINT_XML.out.xml )
+        BEAST_JOINT_TREE( JOINT_XML.out.xml )
 
         // 4. Summarise the posterior tree sample into one MCC tree
-        TREE_ANNOTATOR( BEAST_TREE.out.beast_out_trees )
+        TREE_ANNOTATOR( BEAST_JOINT_TREE.out.beast_out_trees )
 
         // 5. Plot the annotated tree coloured by Group-By
         JOINT_TREE_VISUALIZE(
