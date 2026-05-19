@@ -4,7 +4,7 @@ process JOINT_TREE_VISUALIZE {
 
     conda "conda-forge::biopython=1.81 conda-forge::matplotlib=3.7"
     container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
-        'oras://community.wave.seqera.io/library/biopython_openpyxl_pandas:fb650661820f6788' :
+        'oras://community.wave.seqera.io/library/matplotlib_pip_biopython:df1c4b0b702add4f' :
         'quay.io/biocontainers/python:3.8.3' }"
 
     input:
