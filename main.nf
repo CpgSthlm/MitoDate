@@ -97,7 +97,7 @@ workflow {
 
     } else if (params.run_mode == 'joint_tree') {
 
-        log.info("""\tMaking a date-calibrated tree using the estimated tip dates\n""")
+        log.info("""\tMaking date-calibrated tree using estimated tip dates from ${params.age_summary_file}\n""")
 
         if (!params.age_summary_file) {
             error(
@@ -142,14 +142,14 @@ workflow.onComplete {
         log.info("""
         Thank you for using MitoDate.
 
-        Results are located in the results folder.
+        Results are located in the folder: ${params.outdir}.
         """)
     } else {
         log.info("""
         The pipeline completed unsuccessfully.
 
         Please read the error message. If you need help to solve your issue,
-        feel free to reach out via slack or by opening an issue at
+        feel free to reach out by opening an issue at
         https://github.com/CpgSthlm/MitoDate/issues.
         """)
     }
