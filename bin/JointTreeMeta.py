@@ -117,14 +117,17 @@ def build_rows(
 ) -> Tuple[List[dict], List[str]]:
     """Merge metadata with ages. Return (rows, missing_sample_ids).
 
-    `missing_sample_ids` lists every metadata Sample_ID that has no Age in
-    `ages` (including blank Sample_ID entries, reported as '<blank>').
+    Age resolution per sample:
+      1. If the sample appears in `ages` (tip-dated): use age(Sample)_mean / _Stdev.
+      2. Else if Calibrated_yBP is a valid number in the metadata: use it with
+         Age_Uncertainty = 0.0 (applies to directly-dated and modern samples).
+      3. Otherwise: added to `missing_sample_ids` (TipDating=Y sample absent from CSV).
     """
     rows: List[dict] = []
     missing: List[str] = []
     with metadata_path.open(newline="") as f:
         reader = csv.DictReader(f, delimiter=_sniff_delimiter(metadata_path))
-        _require_columns(reader, META_KEEP_COLS, metadata_path)
+        _require_columns(reader, META_KEEP_COLS + ["Calibrated_yBP"], metadata_path)
 
         for row in reader:
             sample_id = (row.get("Sample_ID") or "").strip()
@@ -133,9 +136,19 @@ def build_rows(
             if sample_id and sample_id in ages:
                 out["Age"], out["Age_Uncertainty"] = ages[sample_id]
             else:
-                out["Age"] = ""
-                out["Age_Uncertainty"] = ""
-                missing.append(sample_id or "<blank>")
+                calibrated = (row.get("Calibrated_yBP") or "").strip()
+                if calibrated and calibrated.upper() != "ND":
+                    try:
+                        out["Age"] = float(calibrated)
+                        out["Age_Uncertainty"] = 0.0
+                    except ValueError:
+                        out["Age"] = ""
+                        out["Age_Uncertainty"] = ""
+                        missing.append(sample_id or "<blank>")
+                else:
+                    out["Age"] = ""
+                    out["Age_Uncertainty"] = ""
+                    missing.append(sample_id or "<blank>")
 
             rows.append(out)
 
@@ -309,7 +322,7 @@ def main(argv=None) -> None:
     write_tsv(output_path, rows)
     print(
         f"Wrote {len(rows)} rows to {output_path} "
-        f"(all with Age from {results_path.name})."
+        f"(tip-dated ages from {results_path.name}; calibrated ages from {metadata_path.name})."
     )
 
     out_dir = fasta_out.parent
