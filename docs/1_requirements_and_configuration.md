@@ -3,24 +3,24 @@
 ## Input Data
 
 MitoDate accepts multiple sequence alignments in FASTA format
-(DNA sequence data). Metadata and prior information are provided
-in separate files. Compressed files (gzip or bzip2) are supported
-and will be automatically uncompressed.
+(aligned DNA sequence data). Metadata and prior information
+are provided in separate files. Compressed files (gzip or
+bzip2) are supported and will be automatically uncompressed.
 
 Input data must be organized as described in
-[Sample Metadata](1.-Pipeline-requirements-and-configuration#sample-metadata),
-[FASTA Sequences](1.-Pipeline-requirements-and-configuration#fasta-sequences),
-and [Priors File](1.-Pipeline-requirements-and-configuration#priors-file).
+[Sample Metadata](1_requirements_and_configuration.md#sample-metadata),
+[FASTA Sequences](1_requirements_and_configuration.md#fasta-sequences),
+[Priors File](1_requirements_and_configuration.md#priors-file).
 
 ## Computational Requirements
 
 Computational requirements depend on dataset size (number of
 sequences), alignment length, and MCMC chain length. Small
-datasets (e.g., 5-10 sequences with 10-20 kb alignments) can
-be processed on a single machine with 8 cores and 16 GB memory
-in a few hours. Larger datasets require more computational
-resources and benefit significantly from multi-threading and
-hardware acceleration (BEAGLE library).
+datasets (e.g., 10-20 sequences with 10-20 kb alignments) can
+be processed on a single machine with 8 cores and 16 GB
+memory in a few hours. Larger datasets require more
+computational resources and benefit significantly from
+multi-threading and hardware acceleration (BEAGLE library).
 
 Nextflow must be available in your environment (install via
 Conda: `conda env create -f environment.yaml`). The pipeline
@@ -40,7 +40,7 @@ highly recommended to keep Nextflow running in the background.
 Ensure sufficient storage space, as the pipeline generates
 many large intermediate files in the `work` directory.
 Temporary files can be deleted after successful completion,
-see [Data Cleanup](4.-data-cleanup).
+see [Data Cleanup](4_data_cleanup.md).
 
 
 # Configuration
@@ -58,6 +58,7 @@ The metadata file must contain the following columns:
 - `Origin`: Geographic origin (optional)
 - `Group-By`: Taxonomic grouping for analysis
 - `Calibrated_yBP`: Age in years before present, or `ND` if undated
+- `TipDating`: Indicate `Y` if the sample is used for tip dating, or `N` if not.
 
 
 ## FASTA Sequences
@@ -65,20 +66,35 @@ The metadata file must contain the following columns:
 A multiple sequence alignment in FASTA format with all
 sequences aligned to the same length. Valid characters are
 A, T, G, C, N and IUPAC degenerate DNA codes. Sequences must
-have simple headers (e.g., `>Sample_ID`).
+have simple headers (e.g., `>Sample_ID`) and the header must
+correspond exactly to the sample ID in the metadata.
 
 ## Priors File
 
-A CSV (comma-separated values) file defining prior distributions
-for analysis parameters (e.g., root divergence time, clock rate).
+A CSV (comma-separated values) file specifying the prior distributions used for tip dating individual samples.
 
 Example format:
+```
+taxa,date,prior,param1,param2,offset
+YUK001,40000,uniform,1000,1000000,0
+YUK002,45000,uniform,1000,1000000,0
+```
 
-```
-Parameter,Distribution,Mean,StdDev,Lower,Upper
-root_age,normal,50000,5000,0,100000
-clock_rate,lognormal,0.001,0.0005,0.0001,0.01
-```
+Column descriptions:
+- `taxa`: Sample ID
+- `date`: Approximate age of the sample in years before present used to initialize the Bayesian chain.
+- `prior`: Type of prior distribution.
+    - Options: `uniform`, `lognormal`, or `normal`.
+- `param1`: First parameter of the prior distribution.
+  - `uniform`: lower bound
+  - `lognormal` / `normal`: mean (`mu`)
+- `param2`: Second parameter of the prior distribution.
+  - `uniform`: upper bound
+  - `lognormal` / `normal`: standard deviation (`sigma`)
+- `offset`: Offset applied to the distribution (default: 0)
+
+> **Note:** Taxa names must exactly match the `Sample_ID` in the metadata file and the sequence headers in the FASTA alignment.
+
 
 ## Configuration File
 
@@ -88,9 +104,8 @@ template configuration file is available at `assets/custom.config`.
 It is recommended to make a copy and modify it according to
 your needs.
 
-
-See [How to Run MitoDate](3.-How-to-run-MitoDate) for detailed
-parameter descriptions and use cases.
+See [How to Run MitoDate](3_how_to_run.md) for detailed parameter descriptions
+and use cases.
 
 ## Compute Resources Configuration
 
@@ -104,8 +119,8 @@ profiles are provided for various compute environments:
 
 You can adjust the resources allocated to each process in
 these configuration files. If a process fails due to
-insufficient memory or time, update the relevant configuration
-to allocate more resources.
+insufficient memory or time, update the relevant
+configuration to allocate more resources.
 
 
 To add a new compute resource configuration file, place it in

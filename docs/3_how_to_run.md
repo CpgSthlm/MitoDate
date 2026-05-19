@@ -2,8 +2,8 @@
 
 ## Quick Start
 
-Copy the configuration file from `assets/custom.config` and fill in your
-parameters
+Copy the configuration file from `assets/custom.config` and
+fill in your parameters.
 
 ## Run the Pipeline
 
@@ -27,9 +27,10 @@ Tab-separated file with columns: `Sample_ID`, `Species`, `Origin`,
 `Group-By`, `Calibrated_yBP` (or 'ND' for undated).
 
 ```
-Sample_ID   Species                Origin      Group-By      Calibrated_yBP
-YUK001      Mammuthus primigenius  Siberia     Mammoth       42000
-YUK002      Mammuthus primigenius  Siberia     Mammoth       38000
+Sample_ID   Species        Origin      Group-By      Calibrated_yBP
+YUK001      M.primigenius  Siberia     Mammoth       42000
+YUK002      M.primigenius  Siberia     Mammoth       38000
+YUK003      M.primigenius  Siberia     Mammoth       ND
 ```
 
 ### FASTA Sequences
@@ -38,9 +39,11 @@ Multiple sequence alignment with all sequences at same length:
 
 ```fasta
 >YUK001
-ATCGATCGATCGATCGATCGATCGATCGATCG
+...ATCGATCGATCGATCGATCGATCGATCGATCG...
 >YUK002
-ATCGATCGATCGATCGATCGATCGATCGATCG
+...ATCGATCGATCGATCGATCGATCGATCGATCG...
+>YUK003
+...ATCGATCGATCGATCGAACGCTCGATAGATCG...
 ```
 
 ### Priors (CSV)
@@ -48,8 +51,8 @@ ATCGATCGATCGATCGATCGATCGATCGATCG
 Parameter prior distributions:
 
 ```
-Parameter,Distribution,Mean,StdDev,Lower,Upper
-root_age,normal,50000,5000,0,100000
+taxa,date,prior,param1,param2,offset
+YUK003,40000,uniform,1000,1000000,0
 ```
 
 ## Rerun Specific Samples
@@ -82,4 +85,3 @@ Then run with your profile:
 nextflow run -c custom.config -profile your_hpc main.nf
 ```
 
----
