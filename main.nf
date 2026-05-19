@@ -21,51 +21,52 @@ workflow {
     // Set the workflow name
     def workflow_name = params.workflow_run_name ?: workflow.runName
 
-    log.info("""\tWorkflow run name: $workflow_name\n""")
+    // Validate run_mode parameter
+    if (!(params.run_mode in ['tip_dating', 'rerun_samples', 'joint_tree'])) {
+        error(
+            "\tError: Invalid run_mode '${params.run_mode}'. Please set run_mode to 'tip_dating', 'rerun_samples', or 'joint_tree'."
+        )
+    }
+
+    // Log the workflow run name and selected mode
+    log.info("""\tWorkflow run name: $workflow_name""")
+    log.info("""\tSelected run mode: $params.run_mode\n""")
 
     //////////////////////////////////////////////////////////////////////////////////////////////
-    // MODE 1 — Main run of the pipeline
+    // MODE 1 — Full tip-dating workflow
     //////////////////////////////////////////////////////////////////////////////////////////////
 
-    if (!params.rerun_tip_dating && !params.make_tree.toBoolean()) {
-
-        log.info("""\tRunning MitoDate Mode 1: Tip-dating samples with BEAST\n""")
+    if (params.run_mode == 'tip_dating') {
 
         ch_metadata = Channel.fromPath(params.sample_metadata,  checkIfExists: true).collect()
-        ch_fasta    = Channel.fromPath(params.fasta,            checkIfExists: true)
+        ch_fasta    = Channel.fromPath(params.fasta,            checkIfExists: true).collect()
         ch_priors   = Channel.fromPath(params.priors,           checkIfExists: true).collect()
 
         // FASTA PROCESSING
-        if ( params.fasta_processing.toBoolean() ) {
-            if ( params.single_sample_dating.toBoolean() ) {
-                SPLITFASTA( ch_fasta, ch_metadata )
-                ch_fastas = SPLITFASTA.out.fastas.flatten()
-            } else {
-                RENAMEFASTA( ch_fasta, ch_metadata )
-                ch_fastas = RENAMEFASTA.out.renamed_fasta
-            }
+        if ( params.single_sample_dating.toBoolean() ) {
+            SPLITFASTA( ch_fasta, ch_metadata )
+            ch_fastas = SPLITFASTA.out.fastas.flatten()
+        } else {
+            RENAMEFASTA( ch_fasta, ch_metadata )
+            ch_fastas = RENAMEFASTA.out.renamed_fasta
         }
 
         // XML GENERATION
-        if ( params.generate_XML.toBoolean() ) {
-            GENERATEXML( ch_fastas, ch_metadata, ch_priors )
-        }
+        GENERATEXML( ch_fastas, ch_metadata, ch_priors )
 
         // RUN BEAST
-        if ( params.run_beast.toBoolean() ) {
-            BEAST_TIP_DATING( GENERATEXML.out.xml )
-            BEAST_LOG_PARSER( BEAST_TIP_DATING.out.beast_out_log )
-            COLLECT_RESULTS( BEAST_LOG_PARSER.out.parsed_results.collect() )
-        }
+        BEAST_TIP_DATING( GENERATEXML.out.xml )
+        BEAST_LOG_PARSER( BEAST_TIP_DATING.out.beast_out_log )
+        COLLECT_RESULTS( BEAST_LOG_PARSER.out.parsed_results.collect() )
 
     //////////////////////////////////////////////////////////////////////////////////////////////
-    // MODE 2 — Rerun BEAST for specific samples
+    // MODE 2 — Rerun tip-dating for specific samples using existing FASTA files
     //////////////////////////////////////////////////////////////////////////////////////////////
 
-    } else if (params.rerun_tip_dating) {
+    } else if (params.run_mode == 'rerun_samples') {
 
-        log.info("""\tMode 2: Rerunning tip-dating BEAST for specific samples: ${params.rerun_tip_dating}""")
-        log.info("""\tNote: Process cache is disabled for GENERATEXML, BEAST_TIP_DATING, BEAST_LOG_PARSER, and COLLECT_RESULTS\n""")
+        log.info("""\tRerunning tip-dating for samples: ${params.rerun_samples}""")
+        //log.info("""\tNote: Process cache is disabled for GENERATEXML, BEAST_TIP_DATING, BEAST_LOG_PARSER, and COLLECT_RESULTS\n""")
 
         if (!file(params.outdir).exists()) {
             error("\tError: Output directory '${params.outdir}' not found. Run the MODE 1 pipeline first.\n" +
@@ -76,13 +77,13 @@ workflow {
         ch_metadata = Channel.fromPath(params.sample_metadata, checkIfExists: true).collect()
         ch_priors   = Channel.fromPath(params.priors,          checkIfExists: true).collect()
 
-        sample_list = params.rerun_tip_dating.split(',').collect { it.trim() }
+        sample_list = params.rerun_samples.split(',').collect { it.trim() }
 
         fasta_files = Channel.fromPath("${params.outdir}/01_fastas/*.fasta")
             .filter { file ->
                 sample_list.any { sample -> file.name.contains(sample) }
             }
-            .ifEmpty { error("\tError: No FASTA files found in ${params.outdir}/01_fastas matching samples: ${params.rerun_tip_dating}. Run MODE 1 with fasta processing first.") }
+            .ifEmpty { error("\tError: No FASTA files found in ${params.outdir}/01_fastas matching samples: ${params.rerun_samples}. Run MODE 1 with fasta processing first.") }
 
         // Regenerate XML, rerun BEAST, and collect results for the specified samples
         GENERATEXML( fasta_files, ch_metadata, ch_priors )
@@ -94,13 +95,13 @@ workflow {
     // MODE 3 — Date calibrated Tree (after reviewing tip-dating results)
     //////////////////////////////////////////////////////////////////////////////////////////////
 
-    } else if (params.make_tree.toBoolean()) {
+    } else if (params.run_mode == 'joint_tree') {
 
-        log.info("""\tMode 3: Building a date-calibrated tree using the estimated tip dates\n""")
+        log.info("""\tMaking a date-calibrated tree using the estimated tip dates\n""")
 
         if (!params.age_summary_file) {
             error(
-                "\tError: Please provide --age_summary_file pointing to a Results_ageSummary.csv from a completed run, e.g.:\n" +
+                "\tError: Please provide --age_summary_file pointing to a Results_ageSummary.csv, e.g.:\n" +
                 "\t--age_summary_file ${params.outdir}/05_age_summary/run_<timestamp>/Results_ageSummary.csv"
             )
         }
