@@ -1,27 +1,20 @@
 # MitoDate
 
-MitoDate is a Nextflow pipeline designed to perform molecular clock dating (also known as tip dating) of ancient mitochondrial genomes (mitogenomes) using BEAST (Bayesian Evolutionary Analysis by Sampling Trees) following the methodology published in Chacón-Duque et al., MBE (2025). The pipeline automates the following processes:
+MitoDate is a Nextflow pipeline for molecular clock dating of ancient mitochondrial genomes with BEAST, following the methodology published in Chacón-Duque et al., MBE (2025).
+It can be used in three modes. `tip_dating` runs the main workflow from aligned FASTA, metadata, and priors. `rerun_samples` reruns selected samples from an earlier `tip_dating` run without starting over. `joint_tree` builds the final dated tree after you have reviewed the tip-dating results.
 
-- Processing and preparing multiple sequence alignments (in FASTA format)
-- Generating BEAST XML configuration files with customizable parameters
-- Running Bayesian phylogenetic inference using BEAST
-- Parsing and collecting results from BEAST analyses
-- Supporting both single and multiple sample dating approaches
+<img src="docs/mitodate.png"/>
 
+## Quick Navigation
 
-### Quick Navigation
+1. [Pipeline Requirements and Configuration](docs/1_requirements_and_configuration.md)
+2. [Pipeline Steps](docs/2_pipeline_steps.md)
+3. [How to Run MitoDate](docs/3_how_to_run.md)
+4. [Data Cleanup](docs/4_data_cleanup.md)
+5. [Changelogs](docs/5_changelogs.md)
 
-1. **[Pipeline Requirements and Configuration](docs/1_requirements_and_configuration.md)** - System requirements, dependencies, and configuration options
-2. **[Pipeline Steps](docs/2_pipeline_steps.md)** - Detailed explanation of each pipeline stage
-3. **[How to Run MitoDate](docs/3_how_to_run.md)** - Step-by-step guide to execute the pipeline
-4. **[Data Cleanup](docs/4_data_cleanup.md)** - Managing output files and cleanup procedures
-5. **[Changelogs](docs/5_changelogs.md)** - Version history and recent updates
+## Support
 
-
-### Support
-
-For questions, issues, or feature requests, please refer to
-the relevant documentation sections or contact:
 Wenxi Li (vanssy0819@gmail.com)
 Bilal Sharif (bilal.bioinfo@gmail.com)
 

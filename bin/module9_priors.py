@@ -13,6 +13,17 @@ def define_operators(jointPrior,joint, MCMC, fasta, priors_table, partition_file
     likelihood(joint, MCMC, partition_file, split_partition)
 
 
+
+def define_operators_joint(jointPrior,joint, MCMC, fasta, partition_file, split_partition,
+                     rootHeight_mean, rootHeight_stdev, rootHeight_offset):
+    subs_HKY(jointPrior, partition_file, split_partition)
+    clock_rate(jointPrior, partition_file, split_partition)
+    treeModel(jointPrior, rootHeight_mean, rootHeight_stdev, rootHeight_offset)
+    skygrid(jointPrior)
+    strict_clock(jointPrior, partition_file, split_partition)
+    likelihood(joint, MCMC, partition_file, split_partition)
+
+
 def subs_HKY(jointPrior, partition_file, split_partition):
     # Substitution Model Priors
     if split_partition:

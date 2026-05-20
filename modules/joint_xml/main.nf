@@ -1,6 +1,6 @@
-process GENERATEXML {
+process JOINT_XML {
     tag "${fasta}"
-    label 'process_generate_xml'
+    label 'process_joint_xml'
 
     conda "conda-forge::python=3.8.3"
     container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
@@ -9,8 +9,7 @@ process GENERATEXML {
 
     input:
     path(fasta)
-    path(metadata)
-    path(priors)
+    path(joint_meta)
 
     output:
     path('*.xml')               , emit: xml
@@ -19,7 +18,7 @@ process GENERATEXML {
     when:
     task.ext.when == null || task.ext.when
 
-    script: // This script is bundled with the pipeline, in {{ name }}/bin/
+    script: // This script is bundled with the pipeline, in bin/
 
     def split_partition     = task.ext.split_partition ?: params.split_partition
     def substitution_model  = task.ext.substitution_model ?: params.substitution_model
@@ -34,10 +33,9 @@ process GENERATEXML {
 
     if (split_partition == 'false') {
         """
-        main_xml_generation.py \\
+        joint_xml_generation.py \\
             -f ${fasta} \\
-            -m ${metadata} \\
-            -p ${priors} \\
+            -m ${joint_meta} \\
             --subs_model ${substitution_model} \\
             --root_mean ${root_mean} \\
             --root_stdev ${root_stdev} \\
@@ -54,10 +52,9 @@ process GENERATEXML {
         """
     } else {
         """
-        main_xml_generation.py \\
+        joint_xml_generation.py \\
             -f ${fasta} \\
-            -m ${metadata} \\
-            -p ${priors} \\
+            -m ${joint_meta} \\
             --subs_model ${substitution_model} \\
             --root_mean ${root_mean} \\
             --root_stdev ${root_stdev} \\

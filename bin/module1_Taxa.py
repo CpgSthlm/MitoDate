@@ -12,6 +12,13 @@ class Taxa:  # should contain date, sequence, taxon set, tip priors
         self.direction = direction
         self.units = units
 
+class Taxa_joint:
+    def __init__(self, name, date, uncertainty, direction='backwards', units='years'):
+        self.name = name
+        self.date = date
+        self.uncertainty = uncertainty
+        self.direction = direction
+        self.units = units
 
 def intro_taxa(beast, fasta, priors_table):
     taxa = ET.SubElement(beast, 'taxa')
@@ -37,3 +44,20 @@ def intro_taxonSet(beast, taxon_set, fasta):
                 if item in sample:
                     taxon = ET.SubElement(taxa_set, 'taxon')
                     taxon.set('idref', sample)
+
+
+def intro_taxa_joint(beast, fasta, joint_tree_meta):
+    taxa = ET.SubElement(beast, 'taxa')
+    taxa.set('id', 'taxa')
+    names = f.get_taxa_name(fasta)
+    dates, uncertainties = f.get_taxa_date_joint(fasta, joint_tree_meta)
+    for name, date, uncertainty in zip(names, dates, uncertainties):
+        sample = Taxa_joint(name, str(float(date)), str(float(uncertainty)))
+        taxon = ET.SubElement(taxa, 'taxon')
+        taxon.set('id', sample.name)
+        date = ET.SubElement(taxon, 'date')
+        date.set('value', sample.date)
+        date.set('direction', sample.direction)
+        date.set('units', sample.units)
+        date.set('uncertainty', sample.uncertainty)
+    return

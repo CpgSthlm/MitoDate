@@ -2,15 +2,10 @@
 
 ## Input Data
 
-MitoDate accepts multiple sequence alignments in FASTA format
-(aligned DNA sequence data). Metadata and prior information
-are provided in separate files. Compressed files (gzip or
-bzip2) are supported and will be automatically uncompressed.
-
-Input data must be organized as described in
-[Sample Metadata](1_requirements_and_configuration.md#sample-metadata),
-[FASTA Sequences](1_requirements_and_configuration.md#fasta-sequences),
-[Priors File](1_requirements_and_configuration.md#priors-file).
+MitoDate accepts multiple sequence alignments in FASTA format.
+Metadata and prior information are provided in separate files.
+Compressed files (gzip or bzip2) are supported and will be
+automatically uncompressed.
 
 ## Computational Requirements
 
@@ -104,6 +99,10 @@ template configuration file is available at `assets/custom.config`.
 It is recommended to make a copy and modify it according to
 your needs.
 
+Start by setting `run_mode` to one of `tip_dating`, `rerun_samples`,
+or `joint_tree`. The remaining required fields depend on the selected
+mode.
+
 See [How to Run MitoDate](3_how_to_run.md) for detailed parameter descriptions
 and use cases.
 
@@ -113,9 +112,10 @@ Configuration files specifying compute resources for MitoDate
 processes are located in the `configs/` directory. Different
 profiles are provided for various compute environments:
 
-- `configs/dardel.config` - For the Dardel HPC cluster
-- `configs/modules.config` - Standard module-level configuration
-- `configs/nf-core-defaults.config` - nf-core standard settings
+- `configs/dardel.config` - For the Dardel HPC cluster (PDC)
+- `configs/mjolnir_copenhagen.config` - For the Mjolnir HPC cluster
+- `configs/modules.config` - Module-level configuration
+- `configs/nf-core-label.config` - nf-core standard resource labels
 
 You can adjust the resources allocated to each process in
 these configuration files. If a process fails due to
