@@ -2,67 +2,85 @@
 
 ## Quick Start
 
-Copy the configuration file from `assets/custom.config` and
-fill in your parameters.
+Copy `assets/custom.config`, fill in your paths, choose a `run_mode`,
+and then run the pipeline with your preferred profile.
 
 ## Run the Pipeline
 
-Nextflow and Apptainer should be available in your path. Run with:
+Basic command:
 
 ```bash
-nextflow run -c custom.config -profile dardel main.nf
+nextflow run main.nf -c custom.config -profile dardel
 ```
 
-Or with your own HPC profile:
+Or with your own profile:
 
 ```bash
-nextflow run -c custom.config -profile <your_hpc_profile> main.nf
+nextflow run main.nf -c custom.config -profile <your_hpc_profile>
 ```
 
-## Input Data Formats
+## Choose a Mode
 
-### Sample Metadata (TSV)
+Set `run_mode` in `custom.config` to one of these values:
 
-Tab-separated file with columns: `Sample_ID`, `Species`, `Origin`,
-`Group-By`, `Calibrated_yBP` (or 'ND' for undated).
+- `tip_dating`: run the full tip-dating workflow.
+- `rerun_samples`: rerun selected samples from an earlier `tip_dating` run.
+- `joint_tree`: build the final dated tree from a previous age summary.
 
-```
-Sample_ID   Species        Origin      Group-By      Calibrated_yBP
-YUK001      M.primigenius  Siberia     Mammoth       42000
-YUK002      M.primigenius  Siberia     Mammoth       38000
-YUK003      M.primigenius  Siberia     Mammoth       ND
-```
+## Mode 1: `tip_dating`
 
-### FASTA Sequences
+Use this mode for a normal run from aligned FASTA, metadata, and priors.
 
-Multiple sequence alignment with all sequences at same length:
+Set at least these fields in `custom.config`:
 
-```fasta
->YUK001
-...ATCGATCGATCGATCGATCGATCGATCGATCG...
->YUK002
-...ATCGATCGATCGATCGATCGATCGATCGATCG...
->YUK003
-...ATCGATCGATCGATCGAACGCTCGATAGATCG...
+```groovy
+params {
+    run_mode = 'tip_dating'
+    sample_metadata = '/path/to/metadata.tsv'
+    fasta = '/path/to/alignment.fasta'
+    priors = '/path/to/priors.csv'
+}
 ```
 
-### Priors (CSV)
+## Mode 2: `rerun_samples`
 
-Parameter prior distributions:
+Use this mode when you already have FASTA files from an earlier `tip_dating`
+run and only want to rerun a few samples.
 
+Keep the same `outdir` as the earlier run and set `rerun_samples` to a
+comma-separated list of sample IDs.
+
+```groovy
+params {
+    run_mode = 'rerun_samples'
+    sample_metadata = '/path/to/metadata.tsv'
+    priors = '/path/to/priors.csv'
+    rerun_samples = 'sample1,sample2,sample3'
+    outdir = 'results'
+}
 ```
-taxa,date,prior,param1,param2,offset
-YUK003,40000,uniform,1000,1000000,0
+
+## Mode 3: `joint_tree`
+
+Use this mode after reviewing the tip-dating results and choosing the
+ages you want to carry into the final tree.
+
+Set these fields in `custom.config`:
+
+```groovy
+params {
+    run_mode = 'joint_tree'
+    sample_metadata = '/path/to/metadata.tsv'
+    fasta = '/path/to/alignment.fasta'
+    age_summary_file = 'results/05_age_summary/run_<timestamp>/Results_ageSummary.csv'
+}
 ```
 
-## Rerun Specific Samples
+## Notes
 
-Rerun tip-dating BEAST analysis for specific samples without reprocessing:
-
-```bash
-nextflow run -c custom.config -profile dardel main.nf \
-    --rerun_tip_dating "sample1,sample2,sample3"
-```
+- Input file format details are described in [Requirements](1_requirements_and_configuration.md).
+- `rerun_samples` expects FASTA files to already exist in `outdir/01_fastas`.
+- `joint_tree` expects `age_summary_file` from a previous `tip_dating` run.
 
 ## HPC Profiles
 
@@ -82,6 +100,6 @@ process {
 Then run with your profile:
 
 ```bash
-nextflow run -c custom.config -profile your_hpc main.nf
+nextflow run main.nf -c custom.config -profile your_hpc
 ```
 
