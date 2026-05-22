@@ -44,7 +44,7 @@ see [Data Cleanup](4_data_cleanup.md).
 
 The sample metadata file is a TSV (tab-separated values) file
 that provides information about each sample to be analyzed.
-A template is available at `assets/README.md`.
+A template is available at `assets/template_meta.tsv`.
 
 The metadata file must contain the following columns:
 
@@ -54,6 +54,14 @@ The metadata file must contain the following columns:
 - `Group-By`: Taxonomic grouping for analysis
 - `Calibrated_yBP`: Age in years before present, or `ND` if undated
 - `TipDating`: Indicate `Y` if the sample is used for tip dating, or `N` if not.
+
+Example format:
+```
+Sample_ID	Species	Origin	Group-By	Calibrated_yBP	TipDating
+Sample1	M.primigenius	WEU	Clade1	10000	N
+Sample2	M.primigenius	NNA	Clade2	ND	Y
+SAmple3	M.primigenius	MEU	Clade3	ND	Y
+```
 
 
 ## FASTA Sequences
@@ -67,13 +75,7 @@ correspond exactly to the sample ID in the metadata.
 ## Priors File
 
 A CSV (comma-separated values) file specifying the prior distributions used for tip dating individual samples.
-
-Example format:
-```
-taxa,date,prior,param1,param2,offset
-YUK001,40000,uniform,1000,1000000,0
-YUK002,45000,uniform,1000,1000000,0
-```
+A template is available at `assets/template_priors.csv`.
 
 Column descriptions:
 - `taxa`: Sample ID
@@ -86,9 +88,23 @@ Column descriptions:
 - `param2`: Second parameter of the prior distribution.
   - `uniform`: upper bound
   - `lognormal` / `normal`: standard deviation (`sigma`)
-- `offset`: Offset applied to the distribution (default: 0)
+- `offset`: Offset applied to the distribution (default: 0
+
+
+Example format:
+```
+taxa,date,prior,param1,param2,offset
+Sample1,40000,uniform,1000,1000000,0
+Sample2,45000,uniform,1000,1000000,0
+```
 
 > **Note:** Taxa names must exactly match the `Sample_ID` in the metadata file and the sequence headers in the FASTA alignment.
+
+> **Note:** Tip-dating priors are the initial assumptions of molecular ages,
+> or time constraints, applied to the tips of the phylogeny. They play a
+> crucial role in the analysis by incorporating existing knowledge and
+> uncertainty into the Bayesian inference. Such priors can be derived from
+> archaeological, geographical, or stratigraphic context.
 
 
 ## Configuration File

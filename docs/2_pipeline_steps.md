@@ -33,11 +33,11 @@ complete phylogenetic model. The pipeline creates XML files containing:
 
 - Sequence data and taxon information
 - Taxon groups and age calibrations (from metadata)
-- DNA substitution model (HKY or GTR)
-- Molecular clock model (strict)
-- Population model (SkyGrid)
+- DNA substitution model
+- Molecular clock model
+- Population model
 - Prior distributions for parameters
-- MCMC settings (chain length, logging frequency)
+- MCMC settings
 
 One XML file is generated per sample or partition combination.
 
@@ -76,6 +76,11 @@ table and combines BEAST estimates with the original metadata.
 - Root age estimates (mean and ESS)
 - Sample age estimates (mean, stdev, 95% HPD, and ESS)
 - Other parameter estimates
+
+> **Note:** Always check whether each analysis has converged, both via
+> the ESS values and via benchmark parameters such as the root age and
+> clock rate. If specific samples have not converged, rerun them with
+> a longer MCMC chain using **Mode 2: `rerun_samples`**.
 
 ---
 
