@@ -65,7 +65,7 @@ workflow {
 
     } else if (params.run_mode == 'rerun_samples') {
 
-        log.info("""\tRerunning tip-dating for samples: ${params.rerun_samples}""")
+        log.info("""\tRerunning tip-dating for samples: ${params.rerun_samples}\n""")
         //log.info("""\tNote: Process cache is disabled for GENERATEXML, BEAST_TIP_DATING, BEAST_LOG_PARSER, and COLLECT_RESULTS\n""")
 
         if (!file(params.outdir).exists()) {
