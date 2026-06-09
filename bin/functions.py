@@ -185,55 +185,103 @@ def tip_date_table(priors_table, fasta):
     return dict(zip(tip_taxa, tip_date))
 
 
+def merge_intervals(intervals):
+    """
+    Merge overlapping or touching half-open [start, end) intervals.
+    Input: iterable of (start, end) tuples (0-based half-open).
+    Output: sorted list of non-overlapping (start, end) tuples.
+    """
+    intervals = sorted(intervals)
+    if not intervals:
+        return []
+    merged = [intervals[0]]
+    for s, e in intervals[1:]:
+        last_s, last_e = merged[-1]
+        if s <= last_e:
+            merged[-1] = (last_s, max(last_e, e))
+        else:
+            merged.append((s, e))
+    return merged
+
+
+def subtract_intervals(keep, remove):
+    """
+    Subtract `remove` from `keep`. Both must already be sorted, non-overlapping
+    half-open [start, end) intervals (use `merge_intervals` first if unsure).
+    Returns a sorted list of non-overlapping (start, end) tuples.
+    """
+    result = []
+    for ks, ke in keep:
+        cur = ks
+        for rs, re in remove:
+            if re <= cur:
+                continue
+            if rs >= ke:
+                break
+            if rs > cur:
+                result.append((cur, rs))
+            cur = max(cur, re)
+            if cur >= ke:
+                break
+        if cur < ke:
+            result.append((cur, ke))
+    return result
+
+
+def _gff_intervals(gff_df, feature_type):
+    """
+    Extract rows of `feature_type` from a parsed GFF DataFrame as 0-based
+    half-open intervals, merging any overlapping rows so each base is counted once.
+    """
+    rows = gff_df[gff_df['type'] == feature_type]
+    return merge_intervals(zip(rows['start'].values - 1, rows['end'].values))
+
+
 def get_partition(taxa, partition, fasta, gff):
     """
-    Returns the sequence for a specified partition from a FASTA file, excluding others.
+    Returns the sequence for a specified partition from a FASTA file.
+    Overlapping rows in the GFF for this partition type are merged so each
+    base is included exactly once.
     """
-    # Read and parse the GFF file into a DataFrame
     gff_df = pd.read_table(gff, comment='#', header=None,
                            names=['seqid', 'source', 'type', 'start', 'end', 'score', 'strand', 'phase', 'attributes'])
 
-    # Filter the GFF DataFrame to get rows that match the partition type
-    partition_df = gff_df[gff_df['type'] == partition]
+    intervals = _gff_intervals(gff_df, partition)
+    if not intervals:
+        raise ValueError(
+            "Partition type '{}' not found in GFF file '{}'.".format(partition, gff))
 
-    # Extract start and end positions for the matching partition
-    start_positions = partition_df['start'].values - 1  # Convert to 0-based indexing
-    end_positions = partition_df['end'].values
-
-    # Extract the corresponding sequences from the FASTA file
     fa_dict = SeqIO.to_dict(SeqIO.parse(fasta, 'fasta'))
-    sequences = [str(fa_dict[taxa][start:end].seq).upper() for start, end in zip(start_positions, end_positions)]
+    sequences = [str(fa_dict[taxa][s:e].seq).upper() for s, e in intervals]
 
     return ''.join(sequences)
 
 
 def partition_exclude(taxa, partition_name, partition_exclude, fasta, gff):
     """
-    Returns the sequence for a partition excluding certain regions specified by partition_exclude.
+    Returns the sequence for `partition_name` with all bases of type
+    `partition_exclude` removed. Both partition and exclusion rows are merged
+    before subtraction, so overlapping/multi-row GFF entries are handled correctly.
     """
-    # Read and parse the GFF file into a DataFrame
     gff_df = pd.read_table(gff, comment='#', header=None,
                            names=['seqid', 'source', 'type', 'start', 'end', 'score', 'strand', 'phase', 'attributes'])
 
-    # Extract the start and end positions for the specified partition
-    partition_df = gff_df[gff_df['type'] == partition_name]
-    exclude_df = gff_df[gff_df['type'] == partition_exclude]
+    partition_intervals = _gff_intervals(gff_df, partition_name)
+    exclude_intervals = _gff_intervals(gff_df, partition_exclude)
 
-    # Get the partition start and end positions
-    p_start = partition_df['start'].values - 1  # 0-based indexing
-    p_end = partition_df['end'].values
+    if not partition_intervals:
+        raise ValueError(
+            "Partition type '{}' not found in GFF file '{}'.".format(partition_name, gff))
+    if not exclude_intervals:
+        raise ValueError(
+            "Exclusion type '{}' not found in GFF file '{}' (required because partition '{}' "
+            "is configured with Exclude='{}').".format(
+                partition_exclude, gff, partition_name, partition_exclude))
 
-    # Get the exclusion region start and end positions
-    exclude_start = exclude_df['start'].values
-    exclude_end = exclude_df['end'].values - 1  # 0-based indexing
+    kept = subtract_intervals(partition_intervals, exclude_intervals)
 
-    # Combine the partition and exclusion regions into separate lists
-    s = [p_start[0], exclude_end[0]]
-    e = [exclude_start[0], p_end[0]]
-
-    # Extract the corresponding sequences from the FASTA file
     fa_dict = SeqIO.to_dict(SeqIO.parse(fasta, 'fasta'))
-    sequences = [str(fa_dict[taxa][start:end].seq).upper() for start, end in zip(s, e)]
+    sequences = [str(fa_dict[taxa][s:e].seq).upper() for s, e in kept]
 
     return ''.join(sequences)
 

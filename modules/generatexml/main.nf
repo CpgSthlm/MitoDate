@@ -38,7 +38,7 @@ process GENERATEXML {
             -f ${fasta} \\
             -m ${metadata} \\
             -p ${priors} \\
-            --subs_model ${substitution_model} \\
+            --subs_model "${substitution_model}" \\
             --root_mean ${root_mean} \\
             --root_stdev ${root_stdev} \\
             --chain_length ${chain_length} \\
@@ -58,13 +58,13 @@ process GENERATEXML {
             -f ${fasta} \\
             -m ${metadata} \\
             -p ${priors} \\
-            --subs_model ${substitution_model} \\
+            --subs_model "${substitution_model}" \\
             --root_mean ${root_mean} \\
             --root_stdev ${root_stdev} \\
             --chain_length ${chain_length} \\
             --log_every ${log_every} \\
             --split_partition \\
-            --annotation ${gff} \\
+            --annotation "${gff}" \\
             --population_model ${population_model} \\
             --clock_model ${clock_model} \\
             --root_offset ${root_offset}
