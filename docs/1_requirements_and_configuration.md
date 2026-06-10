@@ -53,7 +53,7 @@ The metadata file must contain the following columns:
 - `Origin`: Geographic origin (optional)
 - `Group-By`: Taxonomic grouping for analysis
 - `Calibrated_yBP`: Age in years before present, or `ND` if undated
-- `TipDating`: Indicate `Y` if the sample is used for tip dating, or `N` if not.
+- `TipDating`: Indicate `Y` if a sample needs to be tip dated, `N` otherwise
 
 Example format:
 ```
@@ -71,6 +71,10 @@ sequences aligned to the same length. Valid characters are
 A, T, G, C, N and IUPAC degenerate DNA codes. Sequences must
 have simple headers (e.g., `>Sample_ID`) and the header must
 correspond exactly to the sample ID in the metadata.
+Ideally the MSA must be curated prior to running the pipeline.
+As a minimum, we suggest removing any sites that are represented
+only by one sample (and gaps in the rest) and removing any
+problematic regions withing the hypervariable region in the D-Loop
 
 ## Priors File
 
