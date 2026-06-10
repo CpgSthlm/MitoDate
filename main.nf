@@ -41,6 +41,7 @@ workflow {
         ch_metadata = Channel.fromPath(params.sample_metadata,  checkIfExists: true).collect()
         ch_fasta    = Channel.fromPath(params.fasta,            checkIfExists: true).collect()
         ch_priors   = Channel.fromPath(params.priors,           checkIfExists: true).collect()
+        ch_gff      = params.gff ? Channel.fromPath(params.gff,  checkIfExists: true).collect() : Channel.value([])
 
         // FASTA PROCESSING
         if ( params.single_sample_dating.toBoolean() ) {
@@ -52,7 +53,7 @@ workflow {
         }
 
         // XML GENERATION
-        GENERATEXML( ch_fastas, ch_metadata, ch_priors )
+        GENERATEXML( ch_fastas, ch_metadata, ch_priors, ch_gff )
 
         // RUN BEAST
         BEAST_TIP_DATING( GENERATEXML.out.xml )
@@ -76,6 +77,7 @@ workflow {
 
         ch_metadata = Channel.fromPath(params.sample_metadata, checkIfExists: true).collect()
         ch_priors   = Channel.fromPath(params.priors,          checkIfExists: true).collect()
+        ch_gff      = params.gff ? Channel.fromPath(params.gff, checkIfExists: true).collect() : Channel.value([])
 
         sample_list = params.rerun_samples.split(',').collect { it.trim() }
 
@@ -86,7 +88,7 @@ workflow {
             .ifEmpty { error("\tError: No FASTA files found in ${params.outdir}/01_fastas matching samples: ${params.rerun_samples}. Run MODE 1 with fasta processing first.") }
 
         // Regenerate XML, rerun BEAST, and collect results for the specified samples
-        GENERATEXML( fasta_files, ch_metadata, ch_priors )
+        GENERATEXML( fasta_files, ch_metadata, ch_priors, ch_gff )
         BEAST_TIP_DATING( GENERATEXML.out.xml )
         BEAST_LOG_PARSER( BEAST_TIP_DATING.out.beast_out_log )
         COLLECT_RESULTS( BEAST_LOG_PARSER.out.parsed_results.collect() )

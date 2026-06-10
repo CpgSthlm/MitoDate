@@ -11,6 +11,7 @@ process GENERATEXML {
     path(fasta)
     path(metadata)
     path(priors)
+    path(gff)
 
     output:
     path('*.xml')               , emit: xml
@@ -27,7 +28,6 @@ process GENERATEXML {
     def root_stdev          = task.ext.root_stdev ?: params.root_stdev
     def chain_length        = task.ext.chain_length ?: params.chain_length
     def log_every           = task.ext.log_every ?: params.log_every
-    def gff                 = task.ext.gff ?: params.gff ?: ''
     def population_model    = task.ext.population_model ?: params.population_model
     def clock_model         = task.ext.clock_model ?: params.clock_model
     def root_offset         = task.ext.root_offset ?: params.root_offset
