@@ -32,7 +32,7 @@ process GENERATEXML {
     def clock_model         = task.ext.clock_model ?: params.clock_model
     def root_offset         = task.ext.root_offset ?: params.root_offset
 
-    if (split_partition == 'false') {
+    if (!split_partition || split_partition.toString().trim().toLowerCase() == 'false') {
         """
         main_xml_generation.py \\
             -f ${fasta} \\
