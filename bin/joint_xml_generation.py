@@ -48,7 +48,11 @@ def create_partition_file_from_args(args, output_dir):
     if args.split_partition:
         # Parse multi-partition model: "tRNA:HKY+G+I, rRNA:HKY+G+I, ..."
         partitions = [p.split(':') for p in args.subs_model.split(', ')]
-        data = [{'Partition': name, 'Exclude': False, 'Every3': name == 'CDS', 'SubstitutionModel': model}
+        # D_loop alignments exclude the VNTR region by default.
+        data = [{'Partition': name,
+                 'Exclude': 'VNTR' if name == 'D_loop' else False,
+                 'Every3': name == 'CDS',
+                 'SubstitutionModel': model}
                 for name, model in partitions]
     else:
         # Single partition

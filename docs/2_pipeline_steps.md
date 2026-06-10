@@ -15,16 +15,21 @@ The `joint_tree` mode runs a separate set of steps described at the [bottom of t
 
 This workflow performs preprocessing on FASTA sequence alignments:
 
+**Single Sample Dating** (`single_sample_dating = true`):
+Extracts only sequences with calibration dates (excluding samples
+marked 'ND' as undated). Creates individual FASTA alignment files
+for each dated sample, allowing independent analysis of each sample.
+We recommend this default mode for routine analyses. We also provoide
+below the option to run all samples together in a single analysis, in case
+you want to test the effect of analysing multiple samples at the same time.
+
+
 **Multiple Sample Dating** (`single_sample_dating = false`):
 Reads the multiple sequence alignment and renames sequences based on
 metadata information. New sequence headers include Sample ID, Species,
 Origin, Group, and Age. Output is a single renamed FASTA file for
 all samples.
 
-**Single Sample Dating** (`single_sample_dating = true`):
-Extracts only sequences with calibration dates (excluding samples
-marked 'ND' as undated). Creates individual FASTA alignment files
-for each dated sample, allowing independent analysis of each sample.
 
 ## XML Generation
 
@@ -33,11 +38,11 @@ complete phylogenetic model. The pipeline creates XML files containing:
 
 - Sequence data and taxon information
 - Taxon groups and age calibrations (from metadata)
-- DNA substitution model (HKY or GTR)
-- Molecular clock model (strict)
-- Population model (SkyGrid)
+- DNA substitution model
+- Molecular clock model
+- Population model
 - Prior distributions for parameters
-- MCMC settings (chain length, logging frequency)
+- MCMC settings
 
 One XML file is generated per sample or partition combination.
 
@@ -76,6 +81,11 @@ table and combines BEAST estimates with the original metadata.
 - Root age estimates (mean and ESS)
 - Sample age estimates (mean, stdev, 95% HPD, and ESS)
 - Other parameter estimates
+
+> **Note:** Always check whether each analysis has converged, both via
+> the ESS values and via benchmark parameters such as the root age and
+> clock rate. If specific samples have not converged, rerun them with
+> a longer MCMC chain using **Mode 2: `rerun_samples`**.
 
 ---
 

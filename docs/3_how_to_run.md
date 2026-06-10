@@ -82,6 +82,16 @@ params {
 - `rerun_samples` expects FASTA files to already exist in `outdir/01_fastas`.
 - `joint_tree` expects `age_summary_file` from a previous `tip_dating` run.
 
+## Error Strategy
+
+Set `process_errorStrategy` in `custom.config` to control how Nextflow reacts when a process fails.
+
+- `ignore` (default): keep running and continue with remaining tasks.
+- `terminate`: stop the workflow immediately on first failure.
+- `finish`: stop scheduling new tasks, but let running tasks complete.
+- `retry`: retry failed tasks (up to process/profile retry limits).
+
+
 ## HPC Profiles
 
 To create a profile for your HPC system, copy `configs/dardel.config`
