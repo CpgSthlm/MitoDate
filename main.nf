@@ -114,6 +114,7 @@ workflow {
         ch_metadata    = Channel.fromPath(params.sample_metadata, checkIfExists: true).collect()
         ch_age_summary = Channel.fromPath(params.age_summary_file, checkIfExists: true)
         ch_fasta       = Channel.fromPath(params.fasta,            checkIfExists: true)
+        ch_gff         = params.gff ? Channel.fromPath(params.gff, checkIfExists: true).collect() : Channel.value([])
 
         // 1. Merge estimated dates into metadata and rename FASTA accordingly
         JOINT_TREE_META( ch_age_summary, ch_metadata, ch_fasta )
@@ -121,7 +122,8 @@ workflow {
         // 2. Generate BEAST XML — no priors table needed (all samples are now dated)
         JOINT_XML(
             JOINT_TREE_META.out.joint_fasta,
-            JOINT_TREE_META.out.joint_meta
+            JOINT_TREE_META.out.joint_meta,
+            ch_gff
         )
 
         // 3. Run BEAST for the joint dated tree

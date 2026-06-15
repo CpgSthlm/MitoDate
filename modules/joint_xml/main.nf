@@ -10,6 +10,7 @@ process JOINT_XML {
     input:
     path(fasta)
     path(joint_meta)
+    path(gff)
 
     output:
     path('*.xml')               , emit: xml
@@ -26,7 +27,6 @@ process JOINT_XML {
     def root_stdev          = task.ext.root_stdev ?: params.root_stdev
     def chain_length        = task.ext.chain_length ?: params.chain_length
     def log_every           = task.ext.log_every ?: params.log_every
-    def gff                 = task.ext.gff ?: params.gff ?: ''
     def population_model    = task.ext.population_model ?: params.population_model
     def clock_model         = task.ext.clock_model ?: params.clock_model
     def root_offset         = task.ext.root_offset ?: params.root_offset
@@ -36,13 +36,13 @@ process JOINT_XML {
         joint_xml_generation.py \\
             -f ${fasta} \\
             -m ${joint_meta} \\
-            --subs_model ${substitution_model} \\
+            --subs_model "${substitution_model}" \\
             --root_mean ${root_mean} \\
             --root_stdev ${root_stdev} \\
             --chain_length ${chain_length} \\
             --log_every ${log_every} \\
-            --population_model ${population_model} \\
-            --clock_model ${clock_model} \\
+            --population_model "${population_model}" \\
+            --clock_model "${clock_model}" \\
             --root_offset ${root_offset}
 
         cat <<-END_VERSIONS > versions.yml
@@ -55,15 +55,15 @@ process JOINT_XML {
         joint_xml_generation.py \\
             -f ${fasta} \\
             -m ${joint_meta} \\
-            --subs_model ${substitution_model} \\
+            --subs_model "${substitution_model}" \\
             --root_mean ${root_mean} \\
             --root_stdev ${root_stdev} \\
             --chain_length ${chain_length} \\
             --log_every ${log_every} \\
             --split_partition \\
             --annotation ${gff} \\
-            --population_model ${population_model} \\
-            --clock_model ${clock_model} \\
+            --population_model "${population_model}" \\
+            --clock_model "${clock_model}" \\
             --root_offset ${root_offset}
 
         cat <<-END_VERSIONS > versions.yml
