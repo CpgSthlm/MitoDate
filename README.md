@@ -18,7 +18,7 @@ It can be used in three modes. `tip_dating` runs the main workflow from aligned 
 
 ## Support
 
-Wenxi Li (vanssy0819@gmail.com)
+Wenxi Li (wenxi.li@sund.ku.dk)
 Bilal Sharif (bilal.bioinfo@gmail.com)
 
 ## Citation
