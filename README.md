@@ -24,6 +24,8 @@ Bilal Sharif (bilal.bioinfo@gmail.com)
 ## Citation
 
 If you use MitoDate in your research, please cite:
+Li, W., Sharif, B., Heintzman, P. D., Dalén, L. and Chacón-Duque, J. C. 2026. MitoDate: a Nextflow pipeline for molecular clock dating and phylogenetic inference using ancient mitogenomes. – bioRxiv. : 2026.07.28.741234.
+
 
 
 
