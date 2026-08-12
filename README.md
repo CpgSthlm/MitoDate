@@ -16,6 +16,10 @@ It can be used in three modes. `tip_dating` runs the main workflow from aligned 
 4. [Data Cleanup](docs/4_data_cleanup.md)
 5. [Changelogs](docs/5_changelogs.md)
 
+## Test Data
+
+Example input files (10 representative samples from Chacón-Duque et al., MBE 2025) are provided in [`assets/test_data`](assets/test_data)
+
 ## Support
 
 Wenxi Li (vanssy0819@gmail.com)
