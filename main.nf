@@ -3,17 +3,17 @@
 nextflow.enable.dsl = 2
 
 // Import modules
-include { RENAMEFASTA               } from "$projectDir/modules/rename_fastas/rename_fasta.nf"
-include { SPLITFASTA                } from "$projectDir/modules/splitfasta/splitfasta.nf"
-include { GENERATEXML               } from "$projectDir/modules/generatexml/main"
-include { BEAST as BEAST_TIP_DATING } from "$projectDir/modules/beast/main"
-include { BEAST_LOG_PARSER          } from "$projectDir/modules/beastlogparse/main"
-include { COLLECT_RESULTS           } from "$projectDir/modules/beastlogparse/collect_results"
-include { JOINT_TREE_META           } from "$projectDir/modules/joint_tree_meta/main"
-include { JOINT_XML                 } from "$projectDir/modules/joint_xml/main"
-include { BEAST as BEAST_JOINT_TREE } from "$projectDir/modules/beast/main"
-include { TREE_ANNOTATOR            } from "$projectDir/modules/tree_annotator/main"
-include { JOINT_TREE_VISUALIZE      } from "$projectDir/modules/joint_tree_visualize/main"
+include { RENAMEFASTA               } from './modules/rename_fastas/rename_fasta.nf'
+include { SPLITFASTA                } from './modules/splitfasta/splitfasta.nf'
+include { GENERATEXML               } from './modules/generatexml/main'
+include { BEAST as BEAST_TIP_DATING } from './modules/beast/main'
+include { BEAST_LOG_PARSER          } from './modules/beastlogparse/main'
+include { COLLECT_RESULTS           } from './modules/beastlogparse/collect_results'
+include { JOINT_TREE_META           } from './modules/joint_tree_meta/main'
+include { JOINT_XML                 } from './modules/joint_xml/main'
+include { BEAST as BEAST_JOINT_TREE } from './modules/beast/main'
+include { TREE_ANNOTATOR            } from './modules/tree_annotator/main'
+include { JOINT_TREE_VISUALIZE      } from './modules/joint_tree_visualize/main'
 
 
 workflow {
@@ -138,24 +138,24 @@ workflow {
             JOINT_TREE_META.out.joint_meta
         )
     }
-}
 
-// Workflow completion
-workflow.onComplete {
-    if( workflow.success ){
-        log.info("""
-        Thank you for using MitoDate.
+    // Workflow completion
+    workflow.onComplete = {
+        if( workflow.success ){
+            log.info("""
+            Thank you for using MitoDate.
 
-        Results are located in the folder: ${params.outdir}.
-        """)
-    } else {
-        log.info("""
-        The pipeline completed unsuccessfully.
+            Results are located in the folder: ${params.outdir}.
+            """)
+        } else {
+            log.info("""
+            The pipeline completed unsuccessfully.
 
-        Please read the error message. If you need help to solve your issue,
-        feel free to reach out by opening an issue at
-        https://github.com/CpgSthlm/MitoDate/issues.
-        """)
+            Please read the error message. If you need help to solve your issue,
+            feel free to reach out by opening an issue at
+            https://github.com/CpgSthlm/MitoDate/issues.
+            """)
+        }
     }
 }
 
