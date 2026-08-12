@@ -133,7 +133,7 @@ processes are located in the `configs/` directory. Different
 profiles are provided for various compute environments:
 
 - `configs/dardel.config` - For the Dardel HPC cluster (PDC)
-- `configs/mjolnir_copenhagen.config` - For the Mjolnir HPC cluster
+- `configs/mjolnir.config` - For the Mjolnir HPC cluster
 - `configs/modules.config` - Module-level configuration
 - `configs/nf-core-label.config` - nf-core standard resource labels
 
