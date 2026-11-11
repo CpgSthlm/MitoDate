@@ -21,3 +21,15 @@ def skygrid(beast, mean):
 
     populationTree = ET.SubElement(gmrfSkyGridLikelihood, 'populationTree')
     ET.SubElement(populationTree, 'treeModel', attrib={'idref': 'treeModel'})
+
+
+def constant(beast):
+    coalescentLikelihood = ET.SubElement(beast, 'coalescentLikelihood')
+    coalescentLikelihood.set('id', 'coalescent')
+    f.make_comment(beast, ' Generate a coalescent likelihood ')
+
+    model = ET.SubElement(coalescentLikelihood, 'model')
+    ET.SubElement(model, 'constantSize').set('idref', 'constant')
+
+    populationTree = ET.SubElement(coalescentLikelihood, 'populationTree')
+    ET.SubElement(populationTree, 'treeModel', attrib={'idref': 'treeModel'})

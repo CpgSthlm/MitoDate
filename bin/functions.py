@@ -41,6 +41,16 @@ class Partition:
         self.subs_model = subs_model
 
 
+def subs_name(subs_model):
+    """First field of 'HKY+G+I' / 'GTR+I': the model name."""
+    return str(subs_model).split('+')[0].strip()
+
+
+def subs_components(subs_model):
+    """Second and third fields, e.g. 'G' and 'I'. The model name is not included."""
+    return [part.strip() for part in str(subs_model).split('+')[1:3]]
+
+
 class Xml:
     """
     Class for generating XML structure related to population model and root height information.

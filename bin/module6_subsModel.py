@@ -6,6 +6,8 @@ def HKY(beast, partition_file, split_partition):
     if split_partition:
         for p, exclude, every3, susb in f.get_partition_info(partition_file):
             p = f.Partition(p, exclude, every3, susb)
+            if f.subs_name(p.subs_model) != 'HKY':
+                continue
 
             if p.every3:
                 for i in range(1, 4):
@@ -26,11 +28,11 @@ def HKY(beast, partition_file, split_partition):
                     ET.SubElement(relativeRate, 'parameter',
                                   attrib={'id': '{}.CP{}.nu'.format(p.p, i), 'value': '0.3333333333333333', 'lower': '0.0',
                                           'upper': '1.0'})
-                    if 'G' in p.subs_model:
+                    if 'G' in f.subs_components(p.subs_model):
                         gammaShape = ET.SubElement(siteModel, 'gammaShape', attrib={'gammaCategories': '4'})
                         ET.SubElement(gammaShape, 'parameter',
                                       attrib={'id': '{0}.CP{1}.alpha'.format(p.p, i), 'value': '0.5', 'lower': '0.0'})
-                    if 'I' in p.subs_model:
+                    if 'I' in f.subs_components(p.subs_model):
                         proportionInvariant = ET.SubElement(siteModel, 'proportionInvariant')
                         ET.SubElement(proportionInvariant, 'parameter',
                                       attrib={'id': '{}.CP{}.pInv'.format(p.p, i), 'value': '0.5', 'lower': '0.0',
@@ -53,11 +55,11 @@ def HKY(beast, partition_file, split_partition):
                 siteModel = ET.SubElement(beast, 'siteModel', attrib={'id': '{}.siteModel'.format(p.p)})
                 substitutionModel = ET.SubElement(siteModel, 'substitutionModel')
                 ET.SubElement(substitutionModel, 'HKYModel', attrib={'idref': '{}.hky'.format(p.p)})
-                if 'G' in p.subs_model:
+                if 'G' in f.subs_components(p.subs_model):
                     gammaShape = ET.SubElement(siteModel, 'gammaShape', attrib={'gammaCategories': '5'})
                     ET.SubElement(gammaShape, 'parameter',
                                   attrib={'id': '{}.alpha'.format(p.p), 'value': '0.5', 'lower': '0.0'})
-                if 'I' in p.subs_model:
+                if 'I' in f.subs_components(p.subs_model):
                     proportionInvariant = ET.SubElement(siteModel, 'proportionInvariant')
                     ET.SubElement(proportionInvariant, 'parameter',
                                   attrib={'id': '{}.pInv'.format(p.p), 'value': '0.5', 'lower': '0.0', 'upper': '1.0'})
@@ -69,7 +71,7 @@ def HKY(beast, partition_file, split_partition):
 
         for p, exclude, every3, susb in f.get_partition_info(partition_file):
             p = f.Partition(p, exclude, every3, susb)
-            if p.every3:
+            if p.every3 and f.subs_name(p.subs_model) == 'HKY':
                 compoundParameter = ET.SubElement(beast, 'compoundParameter', attrib={'id': '{}.allNus'.format(p.p)})
                 for i in range(1, 4):
                     ET.SubElement(compoundParameter, 'parameter', attrib={'idref': '{}.CP{}.nu'.format(p.p, i)})
@@ -77,6 +79,8 @@ def HKY(beast, partition_file, split_partition):
     else:
         for p, exclude, every3, susb in f.get_partition_info(partition_file):
             p = f.Partition(p, exclude, every3, susb)
+        if f.subs_name(p.subs_model) != 'HKY':
+            return
 
         HKYModel = ET.SubElement(beast, 'HKYModel', attrib={'id': 'hky'})
         frequencies = ET.SubElement(HKYModel, 'frequencies')
@@ -90,11 +94,11 @@ def HKY(beast, partition_file, split_partition):
         siteModel = ET.SubElement(beast, 'siteModel', attrib={'id': 'siteModel'})
         substitutionModel = ET.SubElement(siteModel, 'substitutionModel')
         ET.SubElement(substitutionModel, 'HKYModel', attrib={'idref': 'hky'})
-        if 'G' in p.subs_model:
+        if 'G' in f.subs_components(p.subs_model):
             gammaShape = ET.SubElement(siteModel, 'gammaShape', attrib={'gammaCategories': '5'})
             ET.SubElement(gammaShape, 'parameter',
                           attrib={'id': 'alpha', 'value': '0.5', 'lower': '0.0'})
-        if 'I' in p.subs_model:
+        if 'I' in f.subs_components(p.subs_model):
             proportionInvariant = ET.SubElement(siteModel, 'proportionInvariant')
             ET.SubElement(proportionInvariant, 'parameter',
                           attrib={'id': 'pInv', 'value': '0.5', 'lower': '0.0', 'upper': '1.0'})
@@ -111,6 +115,8 @@ def GTR(beast, partition_file, split_partition):
     if split_partition:
         for p, exclude, every3, susb in f.get_partition_info(partition_file):
             p = f.Partition(p, exclude, every3, susb)
+            if f.subs_name(p.subs_model) != 'GTR':
+                continue
 
             if p.every3:
                 for i in range(1, 4):
@@ -131,11 +137,11 @@ def GTR(beast, partition_file, split_partition):
                     ET.SubElement(relativeRate, 'parameter',
                                   attrib={'id': '{}.CP{}.nu'.format(p.p, i), 'value': '0.3333333333333333', 'lower': '0.0',
                                           'upper': '1.0'})
-                    if 'G' in p.subs_model:
+                    if 'G' in f.subs_components(p.subs_model):
                         gammaShape = ET.SubElement(siteModel, 'gammaShape', attrib={'gammaCategories': '4'})
                         ET.SubElement(gammaShape, 'parameter',
                                       attrib={'id': '{0}.CP{1}.alpha'.format(p.p, i), 'value': '0.5', 'lower': '0.0'})
-                    if 'I' in p.subs_model:
+                    if 'I' in f.subs_components(p.subs_model):
                         proportionInvariant = ET.SubElement(siteModel, 'proportionInvariant')
                         ET.SubElement(proportionInvariant, 'parameter',
                                       attrib={'id': '{}.CP{}.pInv'.format(p.p, i), 'value': '0.5', 'lower': '0.0',
@@ -158,11 +164,11 @@ def GTR(beast, partition_file, split_partition):
                 siteModel = ET.SubElement(beast, 'siteModel', attrib={'id': '{}.siteModel'.format(p.p)})
                 substitutionModel = ET.SubElement(siteModel, 'substitutionModel')
                 ET.SubElement(substitutionModel, 'GTRModel', attrib={'idref': '{}.gtr'.format(p.p)})
-                if 'G' in p.subs_model:
+                if 'G' in f.subs_components(p.subs_model):
                     gammaShape = ET.SubElement(siteModel, 'gammaShape', attrib={'gammaCategories': '5'})
                     ET.SubElement(gammaShape, 'parameter',
                                   attrib={'id': '{}.alpha'.format(p.p), 'value': '0.5', 'lower': '0.0'})
-                if 'I' in p.subs_model:
+                if 'I' in f.subs_components(p.subs_model):
                     proportionInvariant = ET.SubElement(siteModel, 'proportionInvariant')
                     ET.SubElement(proportionInvariant, 'parameter',
                                   attrib={'id': '{}.pInv'.format(p.p), 'value': '0.5', 'lower': '0.0', 'upper': '1.0'})
@@ -174,7 +180,7 @@ def GTR(beast, partition_file, split_partition):
 
         for p, exclude, every3, susb in f.get_partition_info(partition_file):
             p = f.Partition(p, exclude, every3, susb)
-            if p.every3:
+            if p.every3 and f.subs_name(p.subs_model) == 'GTR':
                 compoundParameter = ET.SubElement(beast, 'compoundParameter', attrib={'id': '{}.allNus'.format(p.p)})
                 for i in range(1, 4):
                     ET.SubElement(compoundParameter, 'parameter', attrib={'idref': '{}.CP{}.nu'.format(p.p, i)})
@@ -182,6 +188,8 @@ def GTR(beast, partition_file, split_partition):
     else:
         for p, exclude, every3, susb in f.get_partition_info(partition_file):
             p = f.Partition(p, exclude, every3, susb)
+        if f.subs_name(p.subs_model) != 'GTR':
+            return
 
         GTRModel = ET.SubElement(beast, 'GTRModel', attrib={'id': 'gtr'})
         frequencies = ET.SubElement(GTRModel, 'frequencies')
@@ -195,11 +203,11 @@ def GTR(beast, partition_file, split_partition):
         siteModel = ET.SubElement(beast, 'siteModel', attrib={'id': 'siteModel'})
         substitutionModel = ET.SubElement(siteModel, 'substitutionModel')
         ET.SubElement(substitutionModel, 'GTRModel', attrib={'idref': 'gtr'})
-        if 'G' in p.subs_model:
+        if 'G' in f.subs_components(p.subs_model):
             gammaShape = ET.SubElement(siteModel, 'gammaShape', attrib={'gammaCategories': '5'})
             ET.SubElement(gammaShape, 'parameter',
                           attrib={'id': 'alpha', 'value': '0.5', 'lower': '0.0'})
-        if 'I' in p.subs_model:
+        if 'I' in f.subs_components(p.subs_model):
             proportionInvariant = ET.SubElement(siteModel, 'proportionInvariant')
             ET.SubElement(proportionInvariant, 'parameter',
                           attrib={'id': 'pInv', 'value': '0.5', 'lower': '0.0', 'upper': '1.0'})

@@ -5,7 +5,7 @@ from Bio import SeqIO
 import math
 
 
-def build_initialTree(beast, units):
+def build_skygrid_initialTree(beast, units):
     constantSize = ET.SubElement(beast, 'constantSize', attrib={'id': 'initialDemo', 'units': units})
     populationSize = ET.SubElement(constantSize, 'populationSize')
     popSize_parameter = ET.SubElement(populationSize, 'parameter', attrib={'id': 'initialDemo.popSize', 'value': '100.0'})
@@ -16,6 +16,20 @@ def build_initialTree(beast, units):
     ET.SubElement(coalescentSimulator, 'taxa').set('idref', 'taxa')
     ET.SubElement(coalescentSimulator, 'constantSize').set('idref', 'initialDemo')
     f.make_comment(beast, ' Generate a random starting tree under the coalescent process ')
+
+
+def build_constant_initialTree(beast, units):
+    constantSize = ET.SubElement(beast, 'constantSize', attrib={'id': 'constant', 'units': units})
+    populationSize = ET.SubElement(constantSize, 'populationSize')
+    popSize_parameter = ET.SubElement(populationSize, 'parameter', attrib={'id': 'constant.popSize', 'value': '1.0', 'lower': '0.0'})
+    f.make_comment(beast, ' A prior assumption that the population size has remained constant')
+    f.make_comment(beast, ' throughout the time spanned by the genealogy. ')
+
+    coalescentSimulator = ET.SubElement(beast, 'coalescentSimulator', attrib={'id': 'startingTree'})
+    ET.SubElement(coalescentSimulator, 'taxa').set('idref', 'taxa')
+    ET.SubElement(coalescentSimulator, 'constantSize').set('idref', 'constant')
+    f.make_comment(beast, ' Generate a random starting tree under the coalescent process ')
+
 
 
 def build_treeModel(beast, fasta):
