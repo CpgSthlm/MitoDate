@@ -1,4 +1,5 @@
 Sample_ID	Species	Origin	Group-By	Calibrated_yBP	TipDating
-Sample1	M.primigenius	WEU	Clade1	10000	N
-Sample2	M.primigenius	NNA	Clade2	ND	Y
-SAmple3	M.primigenius	MEU	Clade3	ND	Y
+Sample1	M.primigenius	WEU	Mammuthus	10000	N
+Sample2	M.primigenius	NNA	Mammuthus	ND	Y
+Sample3	M.primigenius	MEU	Mammuthus	ND	Y
+Sample4	M.primigenius	MEU	Mammuthus	ND	Y
