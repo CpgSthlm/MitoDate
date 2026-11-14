@@ -110,21 +110,32 @@ For this test dataset, the alignment includes:
 
 All sequences were aligned using [MAFFT](https://mafft.cbrc.jp/alignment/software/) and saved in FASTA format.
 
+
 **For non-partitioned analyses:**
 
-The VNTR region was manually removed from the alignment to avoid potential alignment ambiguities. The resulting FASTA file is used in this tutorial.
+The VNTR region was manually removed from the alignment to avoid potential alignment ambiguities. The resulting FASTA file is used for non-partitioned analyses:
+
+`ChaconDuque-2025-10-VNTRremoved.fasta`
 
 **For partitioned analyses:**
 
-The alignment can be divided into tRNA, rRNA, CDS and control regions using an accompanying GFF annotation file. Partitioned analyses will be covered in a separate section.
+The alignment can be divided into tRNA, rRNA, coding sequences (CDS), and control regions using a corresponding GFF annotation file with coordinates matching the alignment. Since the VNTR region is annotated in the GFF file, it does not need to be manually removed from the alignment.
 
-Copy the prepared alignment to your working directory:
+For partitioned analyses, use the original FASTA file containing the VNTR region:
+
+`ChaconDuque-2025-10.fasta`
+
+Copy the appropriate alignment file to your working directory, depending on whether you are performing a partitioned or non-partitioned analysis.
+
+For this tutorial, we use the non-partitioned alignment as an example:
 
 ```bash
-cp /path/to/MitoDate/assets/test_data/Chacon-Duque-2025/Chacon-Duque-etal-2025-10representatives-VNTRremoved.fasta /path/to/workdir/
+cp /path/to/MitoDate/assets/test_data/Chacon-Duque-2025/ChaconDuque-2025-10-VNTRremoved.fasta /path/to/workdir/
 ```
 
 Replace `/path/to/MitoDate` and `/path/to/workdir` with the corresponding paths on your system. The same convention is used throughout this tutorial.
+
+
 
 ### 2.2 Prepare Sample Metadata
 
@@ -166,7 +177,7 @@ For example, samples `P033`, and `P035` are marked as `Y`, indicating that their
 Copy the metadata file to your working directory:
 
 ```bash
-cp /path/to/MitoDate/assets/test_data/Chacon-Duque-2025/ChaconDuque2025-meta-10-speciesGroup.tsv /path/to/workdir/
+cp /path/to/MitoDate/assets/test_data/Chacon-Duque-2025/ChaconDuque2025-meta-10.tsv /path/to/workdir/
 ```
 
 ### 2.3 Prepare Tip-Dating Priors
@@ -226,7 +237,7 @@ Make sure that the prior table includes the samples selected for tip dating and 
 Copy the prepared priors to your working directory:
 
 ```bash
-cp /path/to/MitoDate/assets/test_data/Chacon-Duque-2025/Chacon-Duque-2025-priors-10representatives.csv /path/to/workdir/
+cp /path/to/MitoDate/assets/test_data/Chacon-Duque-2025/ChaconDuque-2025-priors-10.csv /path/to/workdir/
 ```
 
 ## 3. Prepare the Configuration File
@@ -306,25 +317,70 @@ single_sample_dating = 'true'
 
 This setting enables the single-sample dating workflow, in the following analyses the undated samples will be dated individually.
 
+
 **Sequence partitioning**
 
-Disable sequence partitioning for this example:
+MitoDate supports both partitioned and non-partitioned analyses. Configure the `split_partition` parameter according to your analysis.
+
+**For non-partitioned analyses:**
+
+Disable sequence partitioning:
 
 ```groovy
 split_partition = 'false'
 ```
 
-We use the full mitochondrial alignment, excluding the VNTR region, without dividing it into separate partitions.
+The entire mitochondrial alignment, excluding the VNTR region, will be analyzed as a single partition.
+
+**For partitioned analyses:**
+
+Enable sequence partitioning:
+
+```groovy
+split_partition = 'true'
+```
+
+In this case, specify the path to the complete mitochondrial alignment, including the VNTR region:
+
+```groovy
+fasta = '/path/to/workdir/Chacon-Duque-2025-10.fasta'
+```
+
+You also need to provide the corresponding GFF annotation file, which defines the genomic regions used for partitioning:
+
+```groovy
+gff = '/path/to/ChaconDuque-2025-NC_007596.2.liftoff.gff3'
+```
+
+The pipeline will use the GFF annotations to divide the alignment into tRNA, rRNA, coding sequences (CDS), and control regions. The VNTR region is identified through the annotation, so manual removal is not required.
 
 **Substitution model**
 
-Specify the nucleotide substitution model:
+Specify the nucleotide substitution model using the `substitution_model` parameter.
+
+**For non-partitioned analyses:**
+
+A single substitution model is applied to the entire alignment:
 
 ```groovy
 substitution_model = 'HKY+G+I'
 ```
 
 Here, `HKY` refers to the Hasegawa–Kishino–Yano substitution model, `+G` accounts for gamma-distributed rate variation among sites, and `+I` allows for a proportion of invariant sites.
+
+**For partitioned analyses:**
+
+You can specify a separate substitution model for each partition using a comma-separated list of partition names and their corresponding models:
+
+```groovy
+substitution_model = 'tRNA:HKY+G+I, rRNA:HKY+G+I, CDS:HKY+G+I, D_loop:HKY+G'
+```
+
+In this example, the `HKY+G+I` model is applied to the tRNA, rRNA, and CDS partitions, while the `HKY+G` model is used for the control region (`D_loop`).
+
+This allows different functional regions of the mitochondrial genome to be modeled separately, accounting for potential differences in their evolutionary patterns.
+
+
 
 **Root calibration**
 

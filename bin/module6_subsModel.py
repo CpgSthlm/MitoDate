@@ -128,7 +128,7 @@ def GTR(beast, partition_file, split_partition):
                                   attrib={'id': '{0}.CP{1}.frequencies'.format(p.p, i), 'value': '0.25 0.25 0.25 0.25'})
                     rates = ET.SubElement(GTRModel, 'rates')
                     ET.SubElement(rates, 'parameter',
-                                  attrib={'id': '{0}.CP{1}.gtr.rates'.format(p.p, i), 'dimension': '6', 'lower': '0.0'})
+                                  attrib={'id': '{0}.CP{1}.gtr.rates'.format(p.p, i), 'dimension': '6', 'value': '1.0', 'lower': '0.0'})
                 for i in range(1, 4):
                     siteModel = ET.SubElement(beast, 'siteModel', attrib={'id': '{0}.CP{1}.siteModel'.format(p.p, i)})
                     substitutionModel = ET.SubElement(siteModel, 'substitutionModel')
@@ -159,7 +159,7 @@ def GTR(beast, partition_file, split_partition):
                 ET.SubElement(frequencies_parameter, 'parameter',
                               attrib={'id': '{}.frequencies'.format(p.p), 'value': '0.25 0.25 0.25 0.25'})
                 rates = ET.SubElement(GTRModel, 'rates')
-                ET.SubElement(rates, 'parameter', attrib={'id': '{}.gtr.rates'.format(p.p), 'dimension': '6', 'lower': '0.0'})
+                ET.SubElement(rates, 'parameter', attrib={'id': '{}.gtr.rates'.format(p.p), 'dimension': '6', 'value': '1.0', 'lower': '0.0'})
 
                 siteModel = ET.SubElement(beast, 'siteModel', attrib={'id': '{}.siteModel'.format(p.p)})
                 substitutionModel = ET.SubElement(siteModel, 'substitutionModel')
@@ -198,7 +198,7 @@ def GTR(beast, partition_file, split_partition):
         ET.SubElement(frequencies_parameter, 'parameter',
                       attrib={'id': 'frequencies',  'value': '0.25 0.25 0.25 0.25'})
         rates = ET.SubElement(GTRModel, 'rates')
-        ET.SubElement(rates, 'parameter', attrib={'id': 'gtr.rates', 'dimension': '6', 'lower': '0.0'})
+        ET.SubElement(rates, 'parameter', attrib={'id': 'gtr.rates', 'dimension': '6', 'value': '1.0', 'lower': '0.0'})
 
         siteModel = ET.SubElement(beast, 'siteModel', attrib={'id': 'siteModel'})
         substitutionModel = ET.SubElement(siteModel, 'substitutionModel')

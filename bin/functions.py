@@ -166,7 +166,7 @@ def get_tip_priors(priors_table, fasta):
 
         tip_priors_list = [
             [tip_prior[i], tip_mu_lower[i], tip_sigma_upper[i], tip_offset[i]]
-            for i in range(len(tip_taxa))
+            for i in matched_indices
         ]
 
     return dict(zip(tip_taxa, tip_priors_list))
@@ -192,7 +192,7 @@ def tip_date_table(priors_table, fasta):
         
         tip_date = priors_df['date'].values.tolist()
 
-    return dict(zip(tip_taxa, tip_date))
+    return dict(zip(tip_taxa, [tip_date[i] for i in matched_indices]))
 
 
 def merge_intervals(intervals):
