@@ -620,11 +620,10 @@ Navigate to the `05_age_summary` directory and open the generated summary CSV fi
 The first few rows of the example output are shown below:
 
 ```csv
-Sample_ID,joint_ESS,prior_ESS,likelihood_ESS,age(root)_mean,age(root)_ESS,clock.rate_mean,clock.rate_ESS,age(Sample)_mean,age(Sample)_Stdev,age(Sample)_HPD_95_Lower,age(Sample)_HPD_95_Upper,age(Sample)_ESS
-P048,4.145447809476067,4.870433699124905,3.609577265589051,450012.2510041753,4.144399075580542,0.25766297840984065,4.871881199717449,450000.0,0.0,450000.0,450000.0,0.0
-MD228,3.226556173029218,3.186428171700787,3.3898632881092734,450020.0624216007,3.851104577532026,0.5990207586965252,3.1831237424058503,450000.0,0.0,450000.0,450000.0,0.0
-P035,4.217312928656525,4.835766825269838,4.004552141112484,450059.819471998,4.746497503776188,0.346435736225648,4.828098972825187,450000.0,0.0,450000.0,450000.0,0.0
-P043,3.3517581798545266,3.363186006487618,3.707546990463755,450048.80335338024,4.035149338143429,0.6273081551734815,3.3639154365410677,450000.0,0.0,450000.0,450000.0,0.0
+Sample_ID,joint_ESS,prior_ESS,likelihood_ESS,age(root)_mean,age(root)_median,age(root)_ESS,clock.rate_mean,clock.rate_ESS,age(Sample)_mean,age(Sample)_median,age(Sample)_Stdev,age(Sample)_HPD_95_Lower,age(Sample)_HPD_95_Upper,age(Sample)_ESS
+L168,1261.4782129830096,1144.595083773112,5610.410533280744,4254979.953084064,4233320.573865017,361.0173001922709,,,463808.2364205825,461631.5152935537,76243.51318889209,320854.3697455327,620144.5706639141,1383.1779203454305
+L169,1186.112250595132,1088.6850775470366,5925.706877502109,4296368.1565403165,4281674.104492424,306.68088788488024,,,544035.3999800907,540039.9772927542,71128.86526323008,416399.82492146874,694113.5344087962,586.473040429647
+L171,1139.8173963962442,1075.171611643558,6486.508429502906,4231579.045509917,4203843.666077049,403.7892116892853,,,534572.3541680914,531559.9084130953,68746.8923973334,395008.4580016128,663224.2052795761,768.6306577709271
 ```
 
 The summary contains several important statistics:
@@ -634,10 +633,12 @@ The summary contains several important statistics:
 - **`prior_ESS`**: ESS of the prior probability.
 - **`likelihood_ESS`**: ESS of the likelihood.
 - **`age(root)_mean`**: Posterior mean estimate of the root age.
+- **`age(root)_median`**: Posterior median estimate of the root age.
 - **`age(root)_ESS`**: ESS of the root age estimate.
 - **`clock.rate_mean`**: Posterior mean estimate of the molecular clock rate.
 - **`clock.rate_ESS`**: ESS of the molecular clock rate.
 - **`age(Sample)_mean`**: Posterior mean estimate of the sample age.
+- **`age(Sample)_median`**: Posterior median estimate of the sample age.
 - **`age(Sample)_Stdev`**: Posterior standard deviation of the estimated sample age.
 - **`age(Sample)_HPD_95_Lower`** and **`age(Sample)_HPD_95_Upper`**: Lower and upper bounds of the 95% highest posterior density (HPD) interval for the sample age.
 - **`age(Sample)_ESS`**: ESS of the estimated sample age.
