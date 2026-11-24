@@ -18,7 +18,15 @@ It can be used in three modes. `tip_dating` runs the main workflow from aligned 
 
 ## Test Data
 
-Example input files (10 representative samples from Chacón-Duque et al., MBE 2025) are provided in [`assets/test_data`](assets/test_data)
+### Test dataset 1
+
+Example input files for 10 representative samples from Chacón-Duque et al., MBE (2025) are in [`assets/test_data/Chacon-Duque-2025`](assets/test_data/Chacon-Duque-2025).
+
+A tutorial for running this dataset is in [`Run_test_dataset1.md`](assets/test_data/Chacon-Duque-2025/Run_test_dataset1.md).
+
+### Test dataset 2
+
+Example input files from Lei et al. (2026; [doi:10.1126/science.aed0430](https://doi.org/10.1126/science.aed0430)) are in [`assets/test_data/Lei-2026`](assets/test_data/Lei-2026).
 
 ## Support
 
