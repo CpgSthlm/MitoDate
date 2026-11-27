@@ -1,3 +1,4 @@
 taxa,date,prior,param1,param2,offset
 Sample2,40000,uniform,1000,1000000,0
-Sample3,45000,uniform,1000,1000000,0
+Sample3,45000,normal,100000,10000,0
+Sample4,45000,lognormal,500000,50000,0

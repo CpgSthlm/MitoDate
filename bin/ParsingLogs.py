@@ -5,10 +5,9 @@ Parsing results from log files:
 - joint (Mean, Stdev, HPD_95_Lower, HPD_95_Upper, ESS)
 - prior (Mean, Stdev, HPD_95_Lower, HPD_95_Upper, ESS)
 - likelihood (Mean, Stdev, HPD_95_Lower, HPD_95_Upper, ESS)
-- skygrid.logPopSize1 (Mean, Stdev, HPD_95_Lower, HPD_95_Upper, ESS)
-- age(root) (Mean, Stdev, HPD_95_Lower, HPD_95_Upper, ESS)
+- age(root) (Mean, Median, Stdev, HPD_95_Lower, HPD_95_Upper, ESS)
 - clock.rate (Mean, Stdev, HPD_95_Lower, HPD_95_Upper, ESS)
-- age(sample_id_ND) (Mean, Stdev, HPD_95_Lower, HPD_95_Upper, ESS)
+- age(sample_id_ND) (Mean, Median, Stdev, HPD_95_Lower, HPD_95_Upper, ESS)
 """
 
 import pandas as pd
@@ -108,12 +107,14 @@ class BeastLogParser:
 
         return max(ess, 1.0)
 
-    def calculate_stats(self, column_name):
+    def calculate_stats(self, column_name, include_median=False):
         """
         Calculate statistics for a given parameter.
 
         Args:
             column_name: Name of the column/parameter
+            include_median: Whether to report the posterior median.
+                            Other rows keep an empty Median so the CSV stays aligned.
 
         Returns:
             Dictionary with statistics
@@ -124,10 +125,12 @@ class BeastLogParser:
         std_val = np.std(values, ddof=1)
         hpd_lower, hpd_upper = self.calculate_hpd_95(values)
         ess_val = self.calculate_ess(values)
+        median_val = np.median(values) if include_median else np.nan
 
         return {
             'Parameter': column_name,
             'Mean': mean_val,
+            'Median': median_val,
             'Stdev': std_val,
             'HPD_95_Lower': hpd_lower,
             'HPD_95_Upper': hpd_upper,
@@ -154,11 +157,11 @@ class BeastLogParser:
 
         results = []
 
-        # Parse key parameters
-        key_params = ['joint', 'prior', 'likelihood', 'age(root)', 'clock.rate', 'skygrid.logPopSize1']
+        # Parse key parameters. Median is reported only for age(root).
+        key_params = ['joint', 'prior', 'likelihood', 'age(root)', 'clock.rate']
         for param in key_params:
             if param in self.data_post_burnin.columns:
-                results.append(self.calculate_stats(param))
+                results.append(self.calculate_stats(param, include_median=(param == 'age(root)')))
                 print(f"  Processed: {param}")
             else:
                 print(f"  Warning: {param} not found in log file")
@@ -177,7 +180,7 @@ class BeastLogParser:
 
         # Process all age(_ND) parameters
         for col, sample_id in age_nd_columns:
-            stats = self.calculate_stats(col)
+            stats = self.calculate_stats(col, include_median=True)
             stats['Sample_ID'] = sample_id
             results.append(stats)
             print(f"  Processed: {sample_id}")

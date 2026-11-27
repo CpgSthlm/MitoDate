@@ -3,23 +3,31 @@ import functions as f
 
 
 def define_operators(jointPrior,joint, MCMC, fasta, priors_table, partition_file, split_partition,
-                     rootHeight_mean, rootHeight_stdev, rootHeight_offset):
+                     rootHeight_mean, rootHeight_stdev, rootHeight_offset, population_model):
+    subs_GTR(jointPrior, partition_file, split_partition)
     subs_HKY(jointPrior, partition_file, split_partition)
     clock_rate(jointPrior, partition_file, split_partition)
     treeModel(jointPrior, rootHeight_mean, rootHeight_stdev, rootHeight_offset)
     tip(jointPrior, fasta, priors_table)
-    skygrid(jointPrior)
+    if population_model == 'skygrid':
+        skygrid(jointPrior)
+    elif population_model == 'constant':
+        constant(jointPrior)
     strict_clock(jointPrior, partition_file, split_partition)
     likelihood(joint, MCMC, partition_file, split_partition)
 
 
 
 def define_operators_joint(jointPrior,joint, MCMC, fasta, partition_file, split_partition,
-                     rootHeight_mean, rootHeight_stdev, rootHeight_offset):
+                     rootHeight_mean, rootHeight_stdev, rootHeight_offset, population_model):
+    subs_GTR(jointPrior, partition_file, split_partition)
     subs_HKY(jointPrior, partition_file, split_partition)
     clock_rate(jointPrior, partition_file, split_partition)
     treeModel(jointPrior, rootHeight_mean, rootHeight_stdev, rootHeight_offset)
-    skygrid(jointPrior)
+    if population_model == 'skygrid':
+        skygrid(jointPrior)
+    elif population_model == 'constant':
+        constant(jointPrior)
     strict_clock(jointPrior, partition_file, split_partition)
     likelihood(joint, MCMC, partition_file, split_partition)
 
@@ -30,7 +38,7 @@ def subs_HKY(jointPrior, partition_file, split_partition):
         for p, exclude, every3, susb in f.get_partition_info(partition_file):
             p = f.Partition(p, exclude, every3, susb)
 
-            if 'HKY' in p.subs_model:
+            if f.subs_name(p.subs_model) == 'HKY':
                 if p.every3:
                     for i in range(1, 4):
                         jointLogNormal = ET.SubElement(jointPrior, 'logNormalPrior',
@@ -46,7 +54,7 @@ def subs_HKY(jointPrior, partition_file, split_partition):
                     ET.SubElement(jointLogNormal, 'parameter', attrib={'idref': '{}.kappa'.format(p.p)})
                     jointDirichlet = ET.SubElement(jointPrior, 'dirichletPrior', attrib={'alpha': '1.0', 'sumsTo': '1.0'})
                     ET.SubElement(jointDirichlet, 'parameter', attrib={'idref': '{}.frequencies'.format(p.p)})
-            if 'G' in p.subs_model:
+            if f.subs_name(p.subs_model) == 'HKY' and 'G' in f.subs_components(p.subs_model):
                 if p.every3:
                     for i in range(1, 4):
                         jointExponential = ET.SubElement(jointPrior, 'exponentialPrior',
@@ -56,7 +64,7 @@ def subs_HKY(jointPrior, partition_file, split_partition):
                     jointExponential = ET.SubElement(jointPrior, 'exponentialPrior',
                                                      attrib={'mean': '0.5', 'offset': '0.0'})
                     ET.SubElement(jointExponential, 'parameter', attrib={'idref': '{}.alpha'.format(p.p)})
-            if 'I' in p.subs_model:
+            if f.subs_name(p.subs_model) == 'HKY' and 'I' in f.subs_components(p.subs_model):
                 if p.every3:
                     for i in range(1, 4):
                         jointUniform = ET.SubElement(jointPrior, 'uniformPrior', attrib={'lower': '0.0', 'upper': '1.0'})
@@ -68,21 +76,75 @@ def subs_HKY(jointPrior, partition_file, split_partition):
         for p, exclude, every3, susb in f.get_partition_info(partition_file):
             p = f.Partition(p, exclude, every3, susb)
 
-        if 'HKY' in p.subs_model:
+        if f.subs_name(p.subs_model) == 'HKY':
             jointLogNormal = ET.SubElement(jointPrior, 'logNormalPrior',
                                            attrib={'mu': '1.0', 'sigma': '1.25', 'offset': '0.0'})
             ET.SubElement(jointLogNormal, 'parameter', attrib={'idref': 'kappa'})
             jointDirichlet = ET.SubElement(jointPrior, 'dirichletPrior', attrib={'alpha': '1.0', 'sumsTo': '1.0'})
             ET.SubElement(jointDirichlet, 'parameter', attrib={'idref': 'frequencies'})
-        if 'G' in p.subs_model:
+        if f.subs_name(p.subs_model) == 'HKY' and 'G' in f.subs_components(p.subs_model):
             jointExponential = ET.SubElement(jointPrior, 'exponentialPrior',
                                              attrib={'mean': '0.5', 'offset': '0.0'})
             ET.SubElement(jointExponential, 'parameter', attrib={'idref': 'alpha'})
-        if 'I' in p.subs_model:
+        if f.subs_name(p.subs_model) == 'HKY' and 'I' in f.subs_components(p.subs_model):
             jointUniform = ET.SubElement(jointPrior, 'uniformPrior', attrib={'lower': '0.0', 'upper': '1.0'})
             ET.SubElement(jointUniform, 'parameter', attrib={'idref': 'pInv'})
 
 
+def subs_GTR(jointPrior, partition_file, split_partition):
+    if split_partition:
+        for p, exclude, every3, susb in f.get_partition_info(partition_file):
+            p = f.Partition(p, exclude, every3, susb)
+
+            if f.subs_name(p.subs_model) == 'GTR':
+                if p.every3:
+                    for i in range(1, 4):
+                        jointDirichlet = ET.SubElement(jointPrior, 'dirichletPrior',
+                                                       attrib={'alpha': '1.0', 'sumsTo': '6.0'})
+                        ET.SubElement(jointDirichlet, 'parameter', attrib={'idref': '{}.CP{}.gtr.rates'.format(p.p, i)})
+                    for i in range(1, 4):
+                        jointDirichlet = ET.SubElement(jointPrior, 'dirichletPrior',
+                                                       attrib={'alpha': '1.0', 'sumsTo': '1.0'})
+                        ET.SubElement(jointDirichlet, 'parameter', attrib={'idref': '{}.CP{}.frequencies'.format(p.p, i)})
+                else:
+                    jointDirichlet = ET.SubElement(jointPrior, 'dirichletPrior', attrib={'alpha': '1.0', 'sumsTo': '6.0'})
+                    ET.SubElement(jointDirichlet, 'parameter', attrib={'idref': '{}.gtr.rates'.format(p.p)})
+                    jointDirichlet = ET.SubElement(jointPrior, 'dirichletPrior', attrib={'alpha': '1.0', 'sumsTo': '1.0'})
+                    ET.SubElement(jointDirichlet, 'parameter', attrib={'idref': '{}.frequencies'.format(p.p)})
+            if f.subs_name(p.subs_model) == 'GTR' and 'G' in f.subs_components(p.subs_model):
+                if p.every3:
+                    for i in range(1, 4):
+                        jointExponential = ET.SubElement(jointPrior, 'exponentialPrior',
+                                                         attrib={'mean': '0.5', 'offset': '0.0'})
+                        ET.SubElement(jointExponential, 'parameter', attrib={'idref': '{}.CP{}.alpha'.format(p.p, i)})
+                else:
+                    jointExponential = ET.SubElement(jointPrior, 'exponentialPrior',
+                                                     attrib={'mean': '0.5', 'offset': '0.0'})
+                    ET.SubElement(jointExponential, 'parameter', attrib={'idref': '{}.alpha'.format(p.p)})
+            if f.subs_name(p.subs_model) == 'GTR' and 'I' in f.subs_components(p.subs_model):
+                if p.every3:
+                    for i in range(1, 4):
+                        jointUniform = ET.SubElement(jointPrior, 'uniformPrior', attrib={'lower': '0.0', 'upper': '1.0'})
+                        ET.SubElement(jointUniform, 'parameter', attrib={'idref': '{}.CP{}.pInv'.format(p.p, i)})
+                else:
+                    jointUniform = ET.SubElement(jointPrior, 'uniformPrior', attrib={'lower': '0.0', 'upper': '1.0'})
+                    ET.SubElement(jointUniform, 'parameter', attrib={'idref': '{}.pInv'.format(p.p)})
+    else:
+        for p, exclude, every3, susb in f.get_partition_info(partition_file):
+            p = f.Partition(p, exclude, every3, susb)
+
+        if f.subs_name(p.subs_model) == 'GTR':
+            jointDirichlet = ET.SubElement(jointPrior, 'dirichletPrior', attrib={'alpha': '1.0', 'sumsTo': '6.0'})
+            ET.SubElement(jointDirichlet, 'parameter', attrib={'idref': 'gtr.rates'})
+            jointDirichlet = ET.SubElement(jointPrior, 'dirichletPrior', attrib={'alpha': '1.0', 'sumsTo': '1.0'})
+            ET.SubElement(jointDirichlet, 'parameter', attrib={'idref': 'frequencies'})
+            if 'G' in f.subs_components(p.subs_model):
+                jointExponential = ET.SubElement(jointPrior, 'exponentialPrior',
+                                                 attrib={'mean': '0.5', 'offset': '0.0'})
+                ET.SubElement(jointExponential, 'parameter', attrib={'idref': 'alpha'})
+            if 'I' in f.subs_components(p.subs_model):
+                jointUniform = ET.SubElement(jointPrior, 'uniformPrior', attrib={'lower': '0.0', 'upper': '1.0'})
+                ET.SubElement(jointUniform, 'parameter', attrib={'idref': 'pInv'})
 
 
 
@@ -113,8 +175,6 @@ def treeModel(jointPrior, rootHeight_mean, rootHeight_stdev, rootHeight_offset):
                                                                         'stdev': str(rootHeight_stdev),
                                                                         'offset': str(rootHeight_offset)})
     ET.SubElement(rootLogNormal, 'parameter', attrib={'idref': 'treeModel.rootHeight'})
-    rootGamma = ET.SubElement(jointPrior, 'gammaPrior', attrib={'shape': '0.001', 'scale': '1000.0', 'offset': '0.0'})
-    ET.SubElement(rootGamma, 'parameter', attrib={'idref': 'skygrid.precision'})
 
 
 def tip(jointPrior, fasta, priors_table):
@@ -140,8 +200,14 @@ def tip(jointPrior, fasta, priors_table):
 
 def skygrid(jointPrior):
     # Population model priors
+    rootGamma = ET.SubElement(jointPrior, 'gammaPrior', attrib={'shape': '0.001', 'scale': '1000.0', 'offset': '0.0'})
+    ET.SubElement(rootGamma, 'parameter', attrib={'idref': 'skygrid.precision'})
     ET.SubElement(jointPrior, 'gmrfSkyGridLikelihood', attrib={'idref': 'skygrid'})
 
+def constant(jointPrior):
+    oneOnXPrior = ET.SubElement(jointPrior, 'oneOnXPrior')
+    ET.SubElement(oneOnXPrior, 'parameter', attrib={'idref': 'constant.popSize'})
+    ET.SubElement(jointPrior, 'coalescentLikelihood', attrib={'idref': 'coalescent'})
 
 def strict_clock(jointPrior, partition_file, split_partition):
     # Clock rate priors

@@ -9,14 +9,16 @@ joint_ESS,
 prior_ESS,
 likelihood_ESS,
 age(root)_mean,
+age(root)_median,
 age(root)_ESS,
 clock.rate_mean,
 clock.rate_ESS,
-age(Sample_ID)_mean,
-age(Sample_ID)_Stdev,
-age(Sample_ID)_HPD_95_Lower,
-age(Sample_ID)_HPD_95_Upper,
-age(Sample_ID)_ESS
+age(Sample)_mean,
+age(Sample)_median,
+age(Sample)_Stdev,
+age(Sample)_HPD_95_Lower,
+age(Sample)_HPD_95_Upper,
+age(Sample)_ESS
 """
 
 import argparse
@@ -79,10 +81,12 @@ def parse_summary_file(path: Path):
         "prior_ESS": get_float(prior, "ESS"),
         "likelihood_ESS": get_float(likelihood, "ESS"),
         "age(root)_mean": get_float(age_root, "Mean"),
+        "age(root)_median": get_float(age_root, "Median"),
         "age(root)_ESS": get_float(age_root, "ESS"),
         "clock.rate_mean": get_float(clock_rate, "Mean"),
         "clock.rate_ESS": get_float(clock_rate, "ESS"),
         "age(Sample)_mean": get_float(sample_age_row, "Mean"),
+        "age(Sample)_median": get_float(sample_age_row, "Median"),
         "age(Sample)_Stdev": get_float(sample_age_row, "Stdev"),
         "age(Sample)_HPD_95_Lower": get_float(sample_age_row, "HPD_95_Lower"),
         "age(Sample)_HPD_95_Upper": get_float(sample_age_row, "HPD_95_Upper"),
@@ -99,7 +103,7 @@ def main(argv=None):
     parser.add_argument(
         "input_files",
         nargs="+",
-        help="Summary CSV files (with header: Parameter,Mean,Stdev,HPD_95_Lower,HPD_95_Upper,ESS,Sample_ID).",
+        help="Summary CSV files (with header: Parameter,Mean,Median,Stdev,HPD_95_Lower,HPD_95_Upper,ESS,Sample_ID).",
     )
     parser.add_argument(
         "-o",
@@ -117,10 +121,12 @@ def main(argv=None):
         "prior_ESS",
         "likelihood_ESS",
         "age(root)_mean",
+        "age(root)_median",
         "age(root)_ESS",
         "clock.rate_mean",
         "clock.rate_ESS",
         "age(Sample)_mean",
+        "age(Sample)_median",
         "age(Sample)_Stdev",
         "age(Sample)_HPD_95_Lower",
         "age(Sample)_HPD_95_Upper",

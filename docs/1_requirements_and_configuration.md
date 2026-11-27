@@ -98,8 +98,9 @@ Column descriptions:
 Example format:
 ```
 taxa,date,prior,param1,param2,offset
-Sample1,40000,uniform,1000,1000000,0
-Sample2,45000,uniform,1000,1000000,0
+Sample2,40000,uniform,1000,1000000,0
+Sample3,45000,normal,100000,10000,0
+Sample4,45000,lognormal,500000,50000,0
 ```
 
 > **Note:** Taxa names must exactly match the `Sample_ID` in the metadata file and the sequence headers in the FASTA alignment.
@@ -118,6 +119,9 @@ contains pipeline workflow steps and analysis parameters. A
 template configuration file is available at `assets/custom.config`.
 It is recommended to make a copy and modify it according to
 your needs.
+
+Detailed instructions and descriptions of the available parameters 
+are provided as comments within the configuration file.
 
 Start by setting `run_mode` to one of `tip_dating`, `rerun_samples`,
 or `joint_tree`. The remaining required fields depend on the selected

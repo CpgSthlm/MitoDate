@@ -321,8 +321,8 @@ class PhylogenyTreeVisualizer:
         self,
         tree,
         stem: Path,
+        posterior_threshold: float,
         tree_linewidth: float = 1.0,
-        posterior_threshold: float = 0.8,
         formats: Iterable[str] = ("png", "pdf"),
         legend_order: Optional[List[str]] = None,
         show_hpd: bool = True,
@@ -330,7 +330,7 @@ class PhylogenyTreeVisualizer:
         hpd_alpha: float = 0.45,
         hpd_linewidth: float = 4.0,
         tip_labels: str = "none",
-        tip_label_fontsize: float = 3.0,
+        tip_label_fontsize: float = 6.0,
     ) -> None:
         fig, ax = plt.subplots(1, 1, figsize=self.figsize)
         groups = self.sample_groups(tree)
@@ -566,8 +566,8 @@ def parse_args() -> argparse.Namespace:
                         "Produces <stem>.{png,pdf} and <stem>_legend.{png,pdf}.")
     p.add_argument("--figsize", nargs=2, type=float, default=(12, 12),
                    metavar=("W", "H"), help="Tree figure size (default: 12 12).")
-    p.add_argument("--posterior-threshold", type=float, default=0.9,
-                   help="Posterior support threshold for black node dots (default: 0.9).")
+    p.add_argument("--posterior-threshold", type=float, default=0.95,
+                   help="Posterior support threshold for black node dots (default: 0.95).")
     p.add_argument("--linewidth", type=float, default=1.0,
                    help="Tree branch line width (default: 1.0).")
     p.add_argument("--tip-labels",
@@ -599,11 +599,12 @@ def main() -> None:
 
     viz = PhylogenyTreeVisualizer(metadata=metadata, figsize=tuple(args.figsize))
     print(f"\nGenerating colored tree (legend in upper-left) -> {stem}.{{png,pdf}}")
+    print(f"Posterior threshold: {args.posterior_threshold}")
     viz.plot_colored_tips_tree(
         tree,
         stem=stem,
-        tree_linewidth=args.linewidth,
         posterior_threshold=args.posterior_threshold,
+        tree_linewidth=args.linewidth,
         tip_labels=args.tip_labels,
     )
     print("\nPlots saved successfully")

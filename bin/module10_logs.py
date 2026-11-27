@@ -24,7 +24,7 @@ def to_screen(MCMC, partition_file, log_every, split_partition):
     f.make_comment(MCMC, ' Write log to screen ')
 
 
-def to_file(MCMC, log_every, log_name, taxon_set, partition_file, fasta, split_partition):
+def to_file(MCMC, log_every, log_name, taxon_set, partition_file, fasta, split_partition, population_model='skygrid'):
     logFile = ET.SubElement(MCMC, 'log',
                             attrib={'id': 'fileLog', 'logEvery': str(log_every), 'fileName': '{}.log'.format(log_name),
                                     'overwrite': 'false'})
@@ -40,14 +40,17 @@ def to_file(MCMC, log_every, log_name, taxon_set, partition_file, fasta, split_p
     for set in taxon_set:
         set_name = [x.strip('.') for x in set]
         ET.SubElement(logFile, 'tmrcaStatistic', attrib={'idref': 'age({})'.format('_and_'.join(set_name))})
-    ET.SubElement(logFile, 'parameter', attrib={'idref': 'skygrid.precision'})
-    ET.SubElement(logFile, 'parameter', attrib={'idref': 'skygrid.logPopSize'})
-    ET.SubElement(logFile, 'parameter', attrib={'idref': 'skygrid.cutOff'})
+    if population_model == 'constant':
+        ET.SubElement(logFile, 'parameter', attrib={'idref': 'constant.popSize'})
+    else:
+        ET.SubElement(logFile, 'parameter', attrib={'idref': 'skygrid.precision'})
+        ET.SubElement(logFile, 'parameter', attrib={'idref': 'skygrid.logPopSize'})
+        ET.SubElement(logFile, 'parameter', attrib={'idref': 'skygrid.cutOff'})
 
     if split_partition:
         for p, exclude, every3, susb in f.get_partition_info(partition_file):
             p = f.Partition(p, exclude, every3, susb)
-            if 'HKY' in p.subs_model:
+            if f.subs_name(p.subs_model) == 'HKY':
                 if p.every3:
                     for i in range(1, 4):
                         ET.SubElement(logFile, 'parameter', attrib={'idref': '{}.CP{}.kappa'.format(p.p, i)})
@@ -55,13 +58,21 @@ def to_file(MCMC, log_every, log_name, taxon_set, partition_file, fasta, split_p
                 else:
                     ET.SubElement(logFile, 'parameter', attrib={'idref': '{}.kappa'.format(p.p)})
                     ET.SubElement(logFile, 'parameter', attrib={'idref': '{}.frequencies'.format(p.p)})
-            if 'G' in p.subs_model:
+            if f.subs_name(p.subs_model) == 'GTR':
+                if p.every3:
+                    for i in range(1, 4):
+                        ET.SubElement(logFile, 'parameter', attrib={'idref': '{}.CP{}.gtr.rates'.format(p.p, i)})
+                        ET.SubElement(logFile, 'parameter', attrib={'idref': '{}.CP{}.frequencies'.format(p.p, i)})
+                else:
+                    ET.SubElement(logFile, 'parameter', attrib={'idref': '{}.gtr.rates'.format(p.p)})
+                    ET.SubElement(logFile, 'parameter', attrib={'idref': '{}.frequencies'.format(p.p)})
+            if 'G' in f.subs_components(p.subs_model):
                 if p.every3:
                     for i in range(1, 4):
                         ET.SubElement(logFile, 'parameter', attrib={'idref': '{}.CP{}.alpha'.format(p.p, i)})
                 else:
                     ET.SubElement(logFile, 'parameter', attrib={'idref': '{}.alpha'.format(p.p)})
-            if 'I' in p.subs_model:
+            if 'I' in f.subs_components(p.subs_model):
                 if p.every3:
                     for i in range(1, 4):
                         ET.SubElement(logFile, 'parameter', attrib={'idref': '{}.CP{}.pInv'.format(p.p, i)})
@@ -70,12 +81,15 @@ def to_file(MCMC, log_every, log_name, taxon_set, partition_file, fasta, split_p
     else:
         for p, exclude, every3, susb in f.get_partition_info(partition_file):
             p = f.Partition(p, exclude, every3, susb)
-        if 'HKY' in p.subs_model:
+        if f.subs_name(p.subs_model) == 'HKY':
             ET.SubElement(logFile, 'parameter', attrib={'idref': 'kappa'})
             ET.SubElement(logFile, 'parameter', attrib={'idref': 'frequencies'})
-        if 'G' in p.subs_model:
+        if f.subs_name(p.subs_model) == 'GTR':
+            ET.SubElement(logFile, 'parameter', attrib={'idref': 'gtr.rates'})
+            ET.SubElement(logFile, 'parameter', attrib={'idref': 'frequencies'})
+        if 'G' in f.subs_components(p.subs_model):
             ET.SubElement(logFile, 'parameter', attrib={'idref': 'alpha'})
-        if 'I' in p.subs_model:
+        if 'I' in f.subs_components(p.subs_model):
             ET.SubElement(logFile, 'parameter', attrib={'idref': 'pInv'})
 
     if split_partition:
@@ -108,7 +122,10 @@ def to_file(MCMC, log_every, log_name, taxon_set, partition_file, fasta, split_p
 
 
 
-    ET.SubElement(logFile, 'gmrfSkyGridLikelihood', attrib={'idref': 'skygrid'})
+    if population_model == 'constant':
+        ET.SubElement(logFile, 'coalescentLikelihood', attrib={'idref': 'coalescent'})
+    else:
+        ET.SubElement(logFile, 'gmrfSkyGridLikelihood', attrib={'idref': 'skygrid'})
 
     f.make_comment(MCMC, ' Write log to file ')
 

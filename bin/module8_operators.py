@@ -2,14 +2,18 @@ import xml.etree.ElementTree as ET
 import functions as f
 
 
-def build_operator(beast, partition_file, fasta, split_partition):
+def build_operator(beast, partition_file, fasta, split_partition, population_model):
     operators = ET.SubElement(beast, 'operators', attrib={'id': 'operators', 'optimizationSchedule': 'log'})
     f.make_comment(beast, ' Define operators ')
 
+    subsModel_GTR(operators, partition_file, split_partition)
     subsModel_HKY(operators, partition_file, split_partition)
     strict_clock(operators, partition_file, split_partition)
     treeModel(operators)
-    skygrid(operators)
+    if population_model == 'skygrid':
+        skygrid(operators)
+    elif population_model == 'constant':
+        constant(operators)
     if f.get_ND_taxa(fasta) is not None:
         tip(operators, fasta)
 
@@ -19,7 +23,7 @@ def subsModel_HKY(operators, partition_file, split_partition):
         for p, exclude, every3, susb in f.get_partition_info(partition_file):
             p = f.Partition(p, exclude, every3, susb)
 
-            if 'HKY' in p.subs_model:
+            if f.subs_name(p.subs_model) == 'HKY':
                 if p.every3:
                     for i in range(1, 4):
                         scaleOperator = ET.SubElement(operators, 'scaleOperator',
@@ -34,7 +38,7 @@ def subsModel_HKY(operators, partition_file, split_partition):
                     deltaExchange = ET.SubElement(operators, 'deltaExchange', attrib={'delta': '0.01', 'weight': '1'})
                     ET.SubElement(deltaExchange, 'parameter', attrib={'idref': '{}.frequencies'.format(p.p)})
 
-            if 'G' in p.subs_model:
+            if f.subs_name(p.subs_model) == 'HKY' and 'G' in f.subs_components(p.subs_model):
                 if p.every3:
                     for i in range(1, 4):
                         gammaScaleOperator = ET.SubElement(operators, 'scaleOperator',
@@ -45,7 +49,7 @@ def subsModel_HKY(operators, partition_file, split_partition):
                                                        attrib={'scaleFactor': '0.75', 'weight': '1'})
                     ET.SubElement(gammaScaleOperator, 'parameter', attrib={'idref': '{}.alpha'.format(p.p)})
 
-            if 'I' in p.subs_model:
+            if f.subs_name(p.subs_model) == 'HKY' and 'I' in f.subs_components(p.subs_model):
                 if p.every3:
                     for i in range(1, 4):
                         randomWalkOperator = ET.SubElement(operators, 'randomWalkOperator',
@@ -62,20 +66,83 @@ def subsModel_HKY(operators, partition_file, split_partition):
     else:
         for p, exclude, every3, susb in f.get_partition_info(partition_file):
             p = f.Partition(p, exclude, every3, susb)
-        if 'HKY' in p.subs_model:
+        if f.subs_name(p.subs_model) == 'HKY':
             scaleOperator = ET.SubElement(operators, 'scaleOperator', attrib={'scaleFactor': '0.75', 'weight': '1'})
             ET.SubElement(scaleOperator, 'parameter', attrib={'idref': 'kappa'})
             deltaExchange = ET.SubElement(operators, 'deltaExchange', attrib={'delta': '0.01', 'weight': '1'})
             ET.SubElement(deltaExchange, 'parameter', attrib={'idref': 'frequencies'})
-        if 'G' in p.subs_model:
+        if f.subs_name(p.subs_model) == 'HKY' and 'G' in f.subs_components(p.subs_model):
             gammaScaleOperator = ET.SubElement(operators, 'scaleOperator',
                                                attrib={'scaleFactor': '0.75', 'weight': '1'})
             ET.SubElement(gammaScaleOperator, 'parameter', attrib={'idref': 'alpha'})
-        if 'I' in p.subs_model:
+        if f.subs_name(p.subs_model) == 'HKY' and 'I' in f.subs_components(p.subs_model):
             randomWalkOperator = ET.SubElement(operators, 'randomWalkOperator',
                                                attrib={'windowSize': '0.75', 'weight': '1',
                                                        'boundaryCondition': 'logit'})
             ET.SubElement(randomWalkOperator, 'parameter', attrib={'idref': 'pInv'})
+
+
+def subsModel_GTR(operators, partition_file, split_partition):
+    if split_partition:
+        for p, exclude, every3, susb in f.get_partition_info(partition_file):
+            p = f.Partition(p, exclude, every3, susb)
+
+            if f.subs_name(p.subs_model) == 'GTR':
+                if p.every3:
+                    for i in range(1, 4):
+                        deltaExchange = ET.SubElement(operators, 'deltaExchange', attrib={'delta': '0.01', 'weight': '1'})
+                        ET.SubElement(deltaExchange, 'parameter', attrib={'idref': '{}.CP{}.gtr.rates'.format(p.p, i)})
+                    for i in range(1, 4):
+                        deltaExchange = ET.SubElement(operators, 'deltaExchange', attrib={'delta': '0.01', 'weight': '1'})
+                        ET.SubElement(deltaExchange, 'parameter', attrib={'idref': '{}.CP{}.frequencies'.format(p.p, i)})
+                else:
+                    deltaExchange = ET.SubElement(operators, 'deltaExchange', attrib={'delta': '0.01', 'weight': '1'})
+                    ET.SubElement(deltaExchange, 'parameter', attrib={'idref': '{}.gtr.rates'.format(p.p)})
+                    deltaExchange = ET.SubElement(operators, 'deltaExchange', attrib={'delta': '0.01', 'weight': '1'})
+                    ET.SubElement(deltaExchange, 'parameter', attrib={'idref': '{}.frequencies'.format(p.p)})
+
+            if f.subs_name(p.subs_model) == 'GTR' and 'G' in f.subs_components(p.subs_model):
+                if p.every3:
+                    for i in range(1, 4):
+                        gammaScaleOperator = ET.SubElement(operators, 'scaleOperator',
+                                                           attrib={'scaleFactor': '0.75', 'weight': '1'})
+                        ET.SubElement(gammaScaleOperator, 'parameter', attrib={'idref': '{}.CP{}.alpha'.format(p.p, i)})
+                else:
+                    gammaScaleOperator = ET.SubElement(operators, 'scaleOperator',
+                                                       attrib={'scaleFactor': '0.75', 'weight': '1'})
+                    ET.SubElement(gammaScaleOperator, 'parameter', attrib={'idref': '{}.alpha'.format(p.p)})
+
+            if f.subs_name(p.subs_model) == 'GTR' and 'I' in f.subs_components(p.subs_model):
+                if p.every3:
+                    for i in range(1, 4):
+                        randomWalkOperator = ET.SubElement(operators, 'randomWalkOperator',
+                                                           attrib={'windowSize': '0.75', 'weight': '1',
+                                                                   'boundaryCondition': 'logit'})
+                        ET.SubElement(randomWalkOperator, 'parameter', attrib={'idref': '{}.CP{}.pInv'.format(p.p, i)})
+                else:
+                    randomWalkOperator = ET.SubElement(operators, 'randomWalkOperator',
+                                                       attrib={'windowSize': '0.75', 'weight': '1',
+                                                               'boundaryCondition': 'logit'})
+                    ET.SubElement(randomWalkOperator, 'parameter', attrib={'idref': '{}.pInv'.format(p.p)})
+
+    else:
+        for p, exclude, every3, susb in f.get_partition_info(partition_file):
+            p = f.Partition(p, exclude, every3, susb)
+        if f.subs_name(p.subs_model) == 'GTR':
+            deltaExchange = ET.SubElement(operators, 'deltaExchange', attrib={'delta': '0.01', 'weight': '1'})
+            ET.SubElement(deltaExchange, 'parameter', attrib={'idref': 'gtr.rates'})
+            deltaExchange = ET.SubElement(operators, 'deltaExchange', attrib={'delta': '0.01', 'weight': '1'})
+            ET.SubElement(deltaExchange, 'parameter', attrib={'idref': 'frequencies'})
+            if 'G' in f.subs_components(p.subs_model):
+                gammaScaleOperator = ET.SubElement(operators, 'scaleOperator',
+                                                   attrib={'scaleFactor': '0.75', 'weight': '1'})
+                ET.SubElement(gammaScaleOperator, 'parameter', attrib={'idref': 'alpha'})
+            if 'I' in f.subs_components(p.subs_model):
+                randomWalkOperator = ET.SubElement(operators, 'randomWalkOperator',
+                                                   attrib={'windowSize': '0.75', 'weight': '1',
+                                                           'boundaryCondition': 'logit'})
+                ET.SubElement(randomWalkOperator, 'parameter', attrib={'idref': 'pInv'})
+
 
 
 def strict_clock(operators, partition_file, split_partition=True):
@@ -127,6 +194,10 @@ def skygrid(operators):
     popModelScaleOperator = ET.SubElement(operators, 'scaleOperator', attrib={'scaleFactor': '0.75', 'weight': '1'})
     ET.SubElement(popModelScaleOperator, 'parameter', attrib={'idref': 'skygrid.precision'})
 
+
+def constant(operators):
+    popModelScaleOperator = ET.SubElement(operators, 'scaleOperator', attrib={'scaleFactor': '0.75', 'weight': '3'})
+    ET.SubElement(popModelScaleOperator, 'parameter', attrib={'idref': 'constant.popSize'})
 
 def tip(operators, fasta):
     # Define tipping operators

@@ -41,6 +41,16 @@ class Partition:
         self.subs_model = subs_model
 
 
+def subs_name(subs_model):
+    """First field of 'HKY+G+I' / 'GTR+I': the model name."""
+    return str(subs_model).split('+')[0].strip()
+
+
+def subs_components(subs_model):
+    """Second and third fields, e.g. 'G' and 'I'. The model name is not included."""
+    return [part.strip() for part in str(subs_model).split('+')[1:3]]
+
+
 class Xml:
     """
     Class for generating XML structure related to population model and root height information.
@@ -156,7 +166,7 @@ def get_tip_priors(priors_table, fasta):
 
         tip_priors_list = [
             [tip_prior[i], tip_mu_lower[i], tip_sigma_upper[i], tip_offset[i]]
-            for i in range(len(tip_taxa))
+            for i in matched_indices
         ]
 
     return dict(zip(tip_taxa, tip_priors_list))
@@ -182,7 +192,7 @@ def tip_date_table(priors_table, fasta):
         
         tip_date = priors_df['date'].values.tolist()
 
-    return dict(zip(tip_taxa, tip_date))
+    return dict(zip(tip_taxa, [tip_date[i] for i in matched_indices]))
 
 
 def merge_intervals(intervals):

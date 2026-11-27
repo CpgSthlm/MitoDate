@@ -161,7 +161,7 @@ def main():
 
     # Read substitution model from partition file
     with open(partition_file, 'rb') as p:
-        subs_model = pd.read_excel(p, header=0)['SubstitutionModel'].iloc[0]
+        subs_models = pd.read_excel(p, header=0)['SubstitutionModel'].astype(str).tolist()
 
     print("Building XML structure...")
 
@@ -176,29 +176,35 @@ def main():
     mSeq.build_patterns(beast, partition_file, split_partition)
 
     # Module 3 -- Introduce the tree model
-    mTreeModel.build_initialTree(beast, units=beast_setting.units)
+    if population_model == 'skygrid':
+        mTreeModel.build_skygrid_initialTree(beast, units=beast_setting.units)
+    elif population_model == 'constant':
+        mTreeModel.build_constant_initialTree(beast, units=beast_setting.units)
     mTreeModel.build_treeModel(beast, fasta)
 
     mTreeModel.calc_tip_branchLen(beast)
     mTreeModel.calc_taxonSet_branchLen(beast, taxon_set)
 
     # Module 4 -- Define the population model
-    mPop.skygrid(beast, mean=beast_setting.root_height_mean)
+    if population_model == 'skygrid':
+        mPop.skygrid(beast, mean=beast_setting.root_height_mean)
+    elif population_model == 'constant':
+        mPop.constant(beast)
 
     # Module 5 -- Define the clock model
     mClock.strict_clock(beast, partition_file, split_partition)
 
     # Module 6 -- Define the substitution model
-    if 'HKY' in subs_model:
+    if any(f.subs_name(model) == 'HKY' for model in subs_models):
         mSubs.HKY(beast, partition_file, split_partition)
-    elif 'GTR' in subs_model:
+    if any(f.subs_name(model) == 'GTR' for model in subs_models):
         mSubs.GTR(beast, partition_file, split_partition)
 
     # Module 7 -- Likelihoods
     mLikeli.calc_likelihood(beast, partition_file, split_partition)
 
     # Module 8 -- Operators
-    mOperator.build_operator(beast, partition_file, fasta, split_partition)
+    mOperator.build_operator(beast, partition_file, fasta, split_partition, population_model)
 
     # Define MCMC
     MCMC = ET.SubElement(beast, 'mcmc', attrib={'id': 'mcmc', 'chainLength': str(chainLength), 'autoOptimize': 'true'})
@@ -210,11 +216,12 @@ def main():
     mPriors.define_operators(jointPrior, joint, MCMC, fasta, priors_table, partition_file, split_partition,
                              rootHeight_mean=beast_setting.root_height_mean,
                              rootHeight_stdev=beast_setting.root_height_stdev,
-                             rootHeight_offset=beast_setting.root_height_offset)
+                             rootHeight_offset=beast_setting.root_height_offset,
+                             population_model=population_model)
 
     # Module 10 -- Write Logs
     mLog.to_screen(MCMC, partition_file, log_every, split_partition)
-    mLog.to_file(MCMC, log_every, log_name, taxon_set, partition_file, fasta, split_partition)
+    mLog.to_file(MCMC, log_every, log_name, taxon_set, partition_file, fasta, split_partition, population_model)
     mLog.trees_to_file(MCMC, log_every, log_name, partition_file, split_partition)
     mLog.report(beast)
 
